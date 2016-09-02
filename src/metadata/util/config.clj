@@ -26,79 +26,79 @@
   "A ref for storing the symbols used to get configuration settings."
   (ref []))
 
-(cc/defprop-int listen-port
+(cc/defprop-optint listen-port
   "The port that metadata listens to."
   [props config-valid configs]
-  "metadata.app.listen-port")
+  "metadata.app.listen-port" 60000)
 
-(cc/defprop-str environment-name
+(cc/defprop-optstr environment-name
   "The name of the environment that this instance of Terrain belongs to."
   [props config-valid configs]
-  "metadata.app.environment-name")
+  "metadata.app.environment-name" "docker-compose")
 
 ;;;Database connection information
-(cc/defprop-str db-driver-class
+(cc/defprop-optstr db-driver-class
   "The name of the JDBC driver to use."
   [props config-valid configs]
-  "metadata.db.driver" )
+  "metadata.db.driver" "org.postgresql.Driver")
 
-(cc/defprop-str db-subprotocol
+(cc/defprop-optstr db-subprotocol
   "The subprotocol to use when connecting to the database (e.g. postgresql)."
   [props config-valid configs]
-  "metadata.db.subprotocol")
+  "metadata.db.subprotocol" "postgresql")
 
-(cc/defprop-str db-host
+(cc/defprop-optstr db-host
   "The host name or IP address to use when
    connecting to the database."
   [props config-valid configs]
-  "metadata.db.host")
+  "metadata.db.host" "dedb")
 
-(cc/defprop-str db-port
+(cc/defprop-optstr db-port
   "The port number to use when connecting to the database."
   [props config-valid configs]
-  "metadata.db.port")
+  "metadata.db.port" "5432")
 
-(cc/defprop-str db-name
+(cc/defprop-optstr db-name
   "The name of the database to connect to."
   [props config-valid configs]
-  "metadata.db.name")
+  "metadata.db.name" "metadata")
 
-(cc/defprop-str db-user
+(cc/defprop-optstr db-user
   "The username to use when authenticating to the database."
   [props config-valid configs]
-  "metadata.db.user")
+  "metadata.db.user" "de")
 
-(cc/defprop-str db-password
+(cc/defprop-optstr db-password
   "The password to use when authenticating to the database."
   [props config-valid configs]
-  "metadata.db.password")
+  "metadata.db.password" "notprod")
 ;;;End database connection information
 
 ;;;AMQP connection information
-(cc/defprop-str amqp-host
+(cc/defprop-optstr amqp-host
   "The hostname for the AMQP server"
   [props config-valid configs]
-  "metadata.amqp.host")
+  "metadata.amqp.host" "rabbit")
 
-(cc/defprop-int amqp-port
+(cc/defprop-optint amqp-port
   "The port number for the AMQP server"
   [props config-valid configs]
-  "metadata.amqp.port")
+  "metadata.amqp.port" 5672)
 
-(cc/defprop-str amqp-user
+(cc/defprop-optstr amqp-user
   "The username for the AMQP server"
   [props config-valid configs]
-  "metadata.amqp.user")
+  "metadata.amqp.user" "guest")
 
-(cc/defprop-str amqp-pass
+(cc/defprop-optstr amqp-pass
   "The password for the AMQP user"
   [props config-valid configs]
-  "metadata.amqp.password")
+  "metadata.amqp.password" "guest")
 
-(cc/defprop-str amqp-exchange
+(cc/defprop-optstr amqp-exchange
   "The exchange name for the AMQP server"
   [props config-valid configs]
-  "metadata.amqp.exchange.name")
+  "metadata.amqp.exchange.name" "de")
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

@@ -41,6 +41,14 @@
              ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
              ;; https://github.com/metosin/compojure-api/issues/102
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
-  :plugins [[test2junit "1.1.3"]]
+  :plugins [[test2junit "1.1.3"]
+            [jonase/eastwood "0.2.3"]]
+  :eastwood {:exclude-namespaces [metadata.routes.schemas.template
+                                  metadata.routes.schemas.permanent-id-requests
+                                  metadata.routes.templates
+                                  metadata.routes.permanent-id-requests
+                                  metadata.routes
+                                  :test-paths]
+             :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
   :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml"])

@@ -1,19 +1,24 @@
-FROM discoenv/javabase
+FROM clojure:alpine
 
-USER root
+RUN apk add --update git && \
+    rm -rf /var/cache/apk
+
 VOLUME ["/etc/iplant/de"]
 
-COPY conf/main/logback.xml /
-COPY target/metadata-standalone.jar /
-
 ARG git_commit=unknown
-ARG buildenv_git_commit=unknown
 ARG version=unknown
 LABEL org.iplantc.de.metadata.git-ref="$git_commit" \
-      org.iplantc.de.metadata.version="$version" \
-      org.iplantc.de.buildenv.git-ref="$buildenv_git_commit"
+      org.iplantc.de.metadata.version="$version"
 
-RUN ln -s "/opt/jdk/bin/java" "/bin/metadata"
+COPY . /usr/src/app
+COPY conf/main/logback.xml /usr/src/app/logback.xml
+
+WORKDIR /usr/src/app
+
+RUN lein uberjar && \
+    cp target/metadata-standalone.jar .
+
+RUN ln -s "/usr/bin/java" "/bin/metadata"
+
 ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
 CMD ["--help"]
-

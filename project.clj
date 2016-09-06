@@ -7,9 +7,9 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/metadata "5.2.8.0"
+(defproject org.cyverse/metadata "2.8.1-SNAPSHOT"
   :description "The REST API for the Discovery Environment Metadata services."
-  :url "https://github.com/iPlantCollaborativeOpenSource/DE"
+  :url "https://github.com/cyverse-de/metadata"
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
@@ -22,12 +22,12 @@
                  [cheshire "5.5.0"]
                  [org.clojure/data.csv "0.1.3"]
                  [com.novemberain/langohr "3.5.1"]
-                 [org.iplantc/clojure-commons "5.2.8.0"]
-                 [org.iplantc/common-cfg "5.2.8.0"]
-                 [org.iplantc/common-cli "5.2.8.0"]
-                 [org.iplantc/common-swagger-api "5.2.8.0"]
-                 [org.iplantc/kameleon "5.2.8.0"]
-                 [org.iplantc/service-logging "5.2.8.0"]
+                 [org.cyverse/clojure-commons "2.8.0"]
+                 [org.cyverse/common-cfg "2.8.0"]
+                 [org.cyverse/common-cli "2.8.0"]
+                 [org.cyverse/common-swagger-api "2.8.0"]
+                 [org.cyverse/kameleon "2.8.0"]
+                 [org.cyverse/service-logging "2.8.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main metadata.core

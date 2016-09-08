@@ -35,7 +35,8 @@
          :init    metadata.core/init-service
          :port    60000}
   :uberjar-name "metadata-standalone.jar"
-  :profiles {:dev     {:plugins        [[lein-ring "0.9.6"]]
+  :profiles {:dev     {:dependencies   [[ring "1.5.0"]] ;; required for lein-ring with compojure-api 1.1.8+
+                       :plugins        [[lein-ring "0.9.7"]]
                        :resource-paths ["conf/test"]}
              ;; compojure-api route macros should not be AOT compiled:
              ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539

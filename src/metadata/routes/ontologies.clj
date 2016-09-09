@@ -6,18 +6,18 @@
         [ring.util.http-response :only [ok]])
   (:require [metadata.services.ontology :as service]))
 
-(defroutes* ontologies
-  (context* "/ontologies" []
+(defroutes ontologies
+  (context "/ontologies" []
     :tags ["ontologies"]
 
-    (GET* "/" []
+    (GET "/" []
           :query [{:keys [user]} StandardUserQueryParams]
           :return OntologyDetailsList
           :summary "List Ontology Details"
           :description "Lists Ontology details saved in the database."
           (ok (service/get-ontology-details-listing)))
 
-    (GET* "/:ontology-version" []
+    (GET "/:ontology-version" []
           :path-params [ontology-version :- OntologyVersionParam]
           :query [{:keys [user]} StandardUserQueryParams]
           :return OntologyHierarchyList
@@ -25,7 +25,7 @@
           :description "List Ontology Hierarchies saved for the given `ontology-version`."
           (ok (service/list-hierarchies ontology-version)))
 
-    (POST* "/:ontology-version/filter" []
+    (POST "/:ontology-version/filter" []
            :path-params [ontology-version :- OntologyVersionParam]
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [type id attrs]} TargetHierarchyFilterRequest]
@@ -36,7 +36,7 @@
             returning only the hierarchy's leaf-classes that are associated with the given target."
            (ok (service/filter-target-hierarchies ontology-version attrs type id)))
 
-    (POST* "/:ontology-version/filter-targets" []
+    (POST "/:ontology-version/filter-targets" []
            :path-params [ontology-version :- OntologyVersionParam]
            :query [{:keys [user label]} OntologySearchParams]
            :body [{:keys [target-types target-ids attrs]} OntologySearchFilterRequest]
@@ -47,7 +47,7 @@
             and Ontology class IRIs as values whose labels match the given Ontology class `label`."
            (ok (service/filter-targets-by-ontology-class-search ontology-version attrs label target-types target-ids)))
 
-    (POST* "/:ontology-version/:root-iri/filter" []
+    (POST "/:ontology-version/:root-iri/filter" []
            :path-params [ontology-version :- OntologyVersionParam
                          root-iri :- OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -59,7 +59,7 @@
             hierarchy's leaf-classes that are associated with the given targets."
            (ok (service/filter-hierarchy ontology-version root-iri attr target-types target-ids)))
 
-    (POST* "/:ontology-version/:root-iri/filter-targets" []
+    (POST "/:ontology-version/:root-iri/filter-targets" []
            :path-params [ontology-version :- OntologyVersionParam
                          root-iri :- OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -71,7 +71,7 @@
             classes of the hierarchy rooted at the given `root-iri`."
            (ok (service/filter-hierarchy-targets ontology-version root-iri attr target-types target-ids)))
 
-    (POST* "/:ontology-version/:root-iri/filter-unclassified" []
+    (POST "/:ontology-version/:root-iri/filter-unclassified" []
            :path-params [ontology-version :- OntologyVersionParam
                          root-iri :- OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -83,27 +83,27 @@
             Ontology classes of the hierarchy rooted at the given `root-iri`."
            (ok (service/filter-unclassified-targets ontology-version root-iri attr target-types target-ids)))))
 
-(defroutes* admin-ontologies
-  (context* "/admin/ontologies" []
+(defroutes admin-ontologies
+  (context "/admin/ontologies" []
     :tags ["admin-ontologies"]
 
-    (POST* "/" []
+    (POST "/" []
            :query [{:keys [user]} StandardUserQueryParams]
            :multipart-params [ontology-xml :- String]
-           :middlewares [service/wrap-multipart-xml-parser]
+           :middleware [service/wrap-multipart-xml-parser]
            :return OntologyDetails
            :summary "Save an Ontology"
            :description "Saves an Ontology XML document in the database."
            (ok (service/save-ontology-xml user ontology-xml)))
 
-    (DELETE* "/:ontology-version" []
+    (DELETE "/:ontology-version" []
              :path-params [ontology-version :- OntologyVersionParam]
              :query [{:keys [user]} StandardUserQueryParams]
              :summary "Delete an Ontology"
              :description "Marks an Ontology as deleted in the database."
              (ok (service/delete-ontology user ontology-version)))
 
-    (DELETE* "/:ontology-version/:root-iri" []
+    (DELETE "/:ontology-version/:root-iri" []
              :path-params [ontology-version :- OntologyVersionParam
                            root-iri :- OntologyClassIRIParam]
              :query [{:keys [user]} StandardUserQueryParams]
@@ -117,7 +117,7 @@
               hierarchy's root with the `PUT` endpoint again."
              (ok (service/delete-hierarchy user ontology-version root-iri)))
 
-    (PUT* "/:ontology-version/:root-iri" []
+    (PUT "/:ontology-version/:root-iri" []
           :path-params [ontology-version :- OntologyVersionParam
                         root-iri :- OntologyClassIRIParam]
           :query [{:keys [user]} StandardUserQueryParams]

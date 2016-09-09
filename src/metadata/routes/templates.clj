@@ -17,18 +17,18 @@
   [attachment filename body]
   (filetype-download-resp "text/csv; charset=utf-8" attachment filename body))
 
-(defroutes* templates
-  (context* "/templates" []
+(defroutes templates
+  (context "/templates" []
     :tags ["template-info"]
 
-    (GET* "/" []
+    (GET "/" []
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates"
       :description "This endpoint lists undeleted metadata templates."
       (ok (templates/list-templates)))
 
-    (GET* "/attr/:attr-id" []
+    (GET "/attr/:attr-id" []
       :path-params [attr-id :- AttrIdPathParam]
       :query [params StandardUserQueryParams]
       :return MetadataTemplateAttr
@@ -36,17 +36,17 @@
       :description "This endpoint returns the details of a single metadata attribute."
       (ok (templates/view-attribute attr-id)))
 
-    (context* "/:template-id" []
+    (context "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
 
-      (GET* "/" []
+      (GET "/" []
         :query [params StandardUserQueryParams]
         :return MetadataTemplate
         :summary "View a Metadata Template"
         :description "This endpoint returns the details of a single metadata template."
         (ok (templates/view-template template-id)))
 
-      (GET* "/blank-csv" []
+      (GET "/blank-csv" []
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a blank CSV template file for a metadata template."
         :description "This endpoint returns a CSV file suitable for a specific template,
@@ -55,7 +55,7 @@
                      the bulk metadata endpoints."
         (csv-download-resp attachment "metadata.csv" (templates/view-template-csv template-id)))
 
-      (GET* "/guide-csv" []
+      (GET "/guide-csv" []
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a CSV guide file for a metadata template."
         :description "This endpoint returns a CSV file guide for a specific template.
@@ -63,25 +63,25 @@
                      filling out a file from the blank-csv endpoint for the same template."
         (csv-download-resp attachment "guide.csv" (templates/view-template-guide template-id)))
 
-      (GET* "/zip-csv" []
+      (GET "/zip-csv" []
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a ZIP file containing both the guide and blank CSV for a template."
         :description "This endpoint returns a zip file containing both the
                      blank CSV and the guide CSV for the same template."
         (filetype-download-resp "application/zip" attachment "template.zip" (templates/view-template-zip template-id))))))
 
-(defroutes* admin-templates
-  (context* "/admin/templates" []
+(defroutes admin-templates
+  (context "/admin/templates" []
     :tags ["template-administration"]
 
-    (GET* "/" []
+    (GET "/" []
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates for Administrators"
       :description "This endpoint lists all metadata templates."
       (ok (templates/admin-list-templates)))
 
-    (POST* "/" []
+    (POST "/" []
       :query [params StandardUserQueryParams]
       :body [body (describe MetadataTemplateUpdate "The template to add.")]
       :return MetadataTemplate
@@ -89,7 +89,7 @@
       :description "This endpoint allows administrators to add new metadata templates."
       (ok (templates/add-template params body)))
 
-    (PUT* "/:template-id" []
+    (PUT "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
       :body [body (describe MetadataTemplateUpdate "The template to update.")]
       :query [params StandardUserQueryParams]
@@ -98,7 +98,7 @@
       :description "This endpoint allows administrators to update existing metadata templates."
       (ok (templates/update-template params template-id body)))
 
-    (DELETE* "/:template-id" []
+    (DELETE "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
       :query [params StandardUserQueryParams]
       :summary "Mark a Metadata Template as Deleted"

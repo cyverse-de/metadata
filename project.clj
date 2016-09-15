@@ -30,7 +30,7 @@
                  [org.cyverse/service-logging "2.8.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
-  :main metadata.core
+  :main ^:skip-aot metadata.core
   :ring {:handler metadata.core/dev-handler
          :init    metadata.core/init-service
          :port    60000}
@@ -38,9 +38,8 @@
   :profiles {:dev     {:dependencies   [[ring "1.5.0"]] ;; required for lein-ring with compojure-api 1.1.8+
                        :plugins        [[lein-ring "0.9.7"]]
                        :resource-paths ["conf/test"]}
-             ;; compojure-api route macros should not be AOT compiled:
-             ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
-             ;; https://github.com/metosin/compojure-api/issues/102
+             ;; compojure-api route macros should not be AOT compiled,
+             ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
   :plugins [[test2junit "1.1.3"]
             [jonase/eastwood "0.2.3"]]

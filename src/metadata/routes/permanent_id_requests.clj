@@ -5,18 +5,18 @@
         [metadata.services.permanent-id-requests]
         [ring.util.http-response :only [ok]]))
 
-(defroutes* permanent-id-request-routes
-  (context* "/permanent-id-requests" []
+(defroutes permanent-id-request-routes
+  (context "/permanent-id-requests" []
     :tags ["permanent-id-requests"]
 
-    (GET* "/" []
+    (GET "/" []
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
       :summary "List Permanent ID Requests"
       :description "Lists all Permanent ID Requests submitted by the requesting user."
       (ok (list-permanent-id-requests params)))
 
-    (POST* "/" []
+    (POST "/" []
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body PermanentIDRequest]
       :return PermanentIDRequestDetails
@@ -24,7 +24,7 @@
       :description "Creates a Permanent ID Request for the requesting user."
       (ok (create-permanent-id-request user body)))
 
-    (GET* "/status-codes" []
+    (GET "/status-codes" []
       :query [params StandardUserQueryParams]
       :return PermanentIDRequestStatusCodeList
       :summary "List Permanent ID Request Status Codes"
@@ -33,7 +33,7 @@
  This allows a status to easily be reused by admins in future status updates."
       (ok (list-permanent-id-request-status-codes params)))
 
-    (GET* "/types" []
+    (GET "/types" []
       :query [params StandardUserQueryParams]
       :return PermanentIDRequestTypeList
       :summary "List Permanent ID Request Types"
@@ -41,7 +41,7 @@
       "Lists the allowed Permanent ID Request Types the user can select when submitting a new request."
       (ok (list-permanent-id-request-types params)))
 
-    (GET* "/:request-id" []
+    (GET "/:request-id" []
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
@@ -49,18 +49,18 @@
       :description "Allows a user to retrieve details for one of their Permanent ID Request submissions."
       (ok (get-permanent-id-request user request-id)))))
 
-(defroutes* admin-permanent-id-request-routes
-  (context* "/admin/permanent-id-requests" []
+(defroutes admin-permanent-id-request-routes
+  (context "/admin/permanent-id-requests" []
     :tags ["admin-permanent-id-requests"]
 
-    (GET* "/" []
+    (GET "/" []
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
       :summary "List Permanent ID Requests"
       :description "Allows administrators to list Permanent ID Requests from all users."
       (ok (admin-list-permanent-id-requests params)))
 
-    (GET* "/:request-id" []
+    (GET "/:request-id" []
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
@@ -68,7 +68,7 @@
       :description "Allows administrators to retrieve details for a Permanent ID Request from any user."
       (ok (admin-get-permanent-id-request user request-id)))
 
-    (POST* "/:request-id/status" []
+    (POST "/:request-id/status" []
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body PermanentIDRequestStatusUpdate]

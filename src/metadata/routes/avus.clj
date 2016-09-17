@@ -5,11 +5,11 @@
         [ring.util.http-response :only [ok]])
   (:require [metadata.services.avus :as avus]))
 
-(defroutes* avus
-  (context* "/avus" []
+(defroutes avus
+  (context "/avus" []
     :tags ["avus"]
 
-    (POST* "/filter-targets" []
+    (POST "/filter-targets" []
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [target-types target-ids avus]} FilterByAvusRequest]
            :return TargetIDList
@@ -19,7 +19,7 @@
             `attrs` and `values`."
            (ok (avus/filter-targets-by-avus target-types target-ids avus)))
 
-    (GET* "/:target-type/:target-id" []
+    (GET "/:target-type/:target-id" []
           :path-params [target-id :- TargetIdPathParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
@@ -28,7 +28,7 @@
           :description "Lists all AVUs associated with the target item."
           (ok (avus/list-avus target-type target-id)))
 
-    (POST* "/:target-type/:target-id" []
+    (POST "/:target-type/:target-id" []
            :path-params [target-id :- TargetIdPathParam
                          target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]
@@ -44,7 +44,7 @@ AVUs included without an ID will be added to the target item, only if an AVU doe
 matching `attr`, `value`, `unit`, `target`, and `type`."
            (ok (avus/update-avus user target-type target-id body)))
 
-    (PUT* "/:target-type/:target-id" []
+    (PUT "/:target-type/:target-id" []
           :path-params [target-id :- TargetIdPathParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
@@ -63,7 +63,7 @@ All other existing AVUs (not included in the request with an ID) will be deleted
 then all remaining AVUs in the request will be added to the target item."
           (ok (avus/set-avus user target-type target-id body)))
 
-    (POST* "/:target-type/:target-id/copy" []
+    (POST "/:target-type/:target-id/copy" []
            :path-params [target-id :- TargetIdPathParam
                     target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]

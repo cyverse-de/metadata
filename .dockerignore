@@ -38,4 +38,6 @@ Temporary Items
 .apdisk
 build.xml
 test2junit
+GIT_COMMIT
+VERSION
 Jenkinsfile

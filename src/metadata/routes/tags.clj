@@ -77,7 +77,15 @@ authenticated user's tags that contain the fragment."
       :path-params [tag-id :- TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe TagUpdateRequest "The tag fields to update.")]
-      :return TagDetails
+      :responses {200      {:schema      TagDetails
+                            :description "The tag was successfully created"}
+                  400      {:schema      ErrorResponseBadTagRequest
+                            :description "The `value` was not unique, too long,
+                             or the request body wasn't syntactically correct"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "Update Tag Labels/Descriptions"
       :description
       "This endpoint allows a tag's label and description to be modified by the owning user."

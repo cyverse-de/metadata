@@ -41,7 +41,7 @@
              ;; compojure-api route macros should not be AOT compiled,
              ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
-  :plugins [[test2junit "1.1.3"]
+  :plugins [[test2junit "1.2.2"]
             [jonase/eastwood "0.2.3"]]
   :eastwood {:exclude-namespaces [metadata.routes.schemas.template
                                   metadata.routes.schemas.permanent-id-requests

@@ -3,7 +3,8 @@
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.tags]
         [ring.util.http-response :only [ok]])
-  (:require [metadata.services.tags :as tags]))
+  (:require [compojure.api.middleware :as middleware]
+            [metadata.services.tags :as tags]))
 
 (defroutes filesystem-tags
   (context "/filesystem/data" []
@@ -69,6 +70,15 @@ authenticated user's tags that contain the fragment."
     (DELETE "/user/:tag-id" []
       :path-params [tag-id :- TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
+                            :description "The tag was successfully deleted"}
+                  404      {:schema      ErrorResponseNotFound
+                            :description "`tag-id` wasn't a UUID of a tag owned by the authenticated user"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "Delete a Tag"
       :description "This endpoint allows a user tag to be deleted, detaching it from all metadata."
       (ok (tags/delete-user-tag user tag-id)))

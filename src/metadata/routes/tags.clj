@@ -23,7 +23,17 @@
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
-      :return UpdateAttachedTagsResponse
+      :responses {200      {:schema      UpdateAttachedTagsResponse
+                            :description "The tags were attached or detached from the file or folder"}
+                  400      {:schema      ErrorResponseBadTagRequest
+                            :description "The `type` wasn't provided or had a value other than `attach` or `detach`;
+                             or the request body wasn't syntactically correct"}
+                  404      {:schema      ErrorResponseNotFound
+                            :description "One of the provided tag Ids doesn't map to a tag for the authenticated user"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "Attach/Detach Tags to a File/Folder"
       :description "
 Depending on the `type` parameter, this endpoint either attaches a set of the authenticated user's

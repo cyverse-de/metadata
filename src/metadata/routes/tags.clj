@@ -35,7 +35,15 @@ tags to the indicated file or folder, or it detaches the set."
 
     (GET "/suggestions" []
       :query [{:keys [user contains limit]} TagSuggestQueryParams]
-      :return TagList
+      :responses {200      {:schema      TagList
+                            :description "zero or more suggestions were returned"}
+                  400      {:schema      ErrorResponseIllegalArgument
+                            :description "the `contains` parameter was missing or
+                                the `limit` parameter was set to a something other than a non-negative number."}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "Suggest a Tag"
       :description "
 Given a textual fragment of a tag's value, this endpoint will list up to a given number of the

@@ -53,7 +53,15 @@ authenticated user's tags that contain the fragment."
     (POST "/user" []
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe TagRequest "The user tag to create.")]
-      :return TagDetails
+      :responses {200      {:schema      TagDetails
+                            :description "The tag was successfully created"}
+                  400      {:schema      ErrorResponseBadTagRequest
+                            :description "The `value` was not unique, too long,
+                             or the request body wasn't syntactically correct"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "Create a Tag"
       :description "This endpoint creates a tag for use by the authenticated user."
       (ok (tags/create-user-tag user body)))

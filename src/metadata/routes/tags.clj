@@ -13,7 +13,12 @@
     (GET "/:data-id/tags" []
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
-      :return TagList
+      :responses {200      {:schema      TagList
+                            :description "The tags are listed in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
       :summary "List Attached Tags"
       :description
       "This endpoint lists the tags of the user that are attached to the indicated file or folder."

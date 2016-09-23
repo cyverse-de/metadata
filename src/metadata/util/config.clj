@@ -75,30 +75,25 @@
 ;;;End database connection information
 
 ;;;AMQP connection information
-(cc/defprop-optstr amqp-host
-  "The hostname for the AMQP server"
+(cc/defprop-optstr amqp-uri
+  "The URI to connect to the AMQP server"
   [props config-valid configs]
-  "metadata.amqp.host" "rabbit")
-
-(cc/defprop-optint amqp-port
-  "The port number for the AMQP server"
-  [props config-valid configs]
-  "metadata.amqp.port" 5672)
-
-(cc/defprop-optstr amqp-user
-  "The username for the AMQP server"
-  [props config-valid configs]
-  "metadata.amqp.user" "guest")
-
-(cc/defprop-optstr amqp-pass
-  "The password for the AMQP user"
-  [props config-valid configs]
-  "metadata.amqp.password" "guest")
+  "metadata.amqp.uri" "amqp://guest:guestPW@localhost:5672")
 
 (cc/defprop-optstr amqp-exchange
   "The exchange name for the AMQP server"
   [props config-valid configs]
   "metadata.amqp.exchange.name" "de")
+
+(cc/defprop-optstr amqp-exchange-type
+  "The name of the AMQP exchange type"
+  [props config-valid configs]
+  "metadata.amqp.exchange.type" "topic")
+
+(cc/defprop-optstr amqp-exchange-type
+  "The name of the AMQP exchange type"
+  [props config-valid configs]
+  "metadata.amqp.exchange.type" "topic")
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

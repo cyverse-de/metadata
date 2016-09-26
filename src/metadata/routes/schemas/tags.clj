@@ -1,6 +1,8 @@
 (ns metadata.routes.schemas.tags
-  (:use [common-swagger-api.schema :only [->optional-param
+  (:use [clojure-commons.error-codes]
+        [common-swagger-api.schema :only [->optional-param
                                           describe
+                                          ErrorResponse
                                           NonBlankString
                                           StandardUserQueryParams]]
         [metadata.routes.schemas.common])
@@ -65,3 +67,7 @@
 
 (s/defschema UpdateAttachedTagsResponse
   {:tags (describe [AttachedTagDetails] "A list of tags and their attached targets")})
+
+(s/defschema ErrorResponseBadTagRequest
+  (assoc ErrorResponse
+    :error_code (describe (s/enum ERR_ILLEGAL_ARGUMENT ERR_NOT_UNIQUE) "Bad Tag Request error codes")))

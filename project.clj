@@ -28,6 +28,7 @@
                  [org.cyverse/common-swagger-api "2.8.1"]
                  [org.cyverse/kameleon "2.8.0"]
                  [org.cyverse/service-logging "2.8.0"]
+                 [org.cyverse/event-messages "0.0.1"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main ^:skip-aot metadata.core

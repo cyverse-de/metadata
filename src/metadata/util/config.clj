@@ -91,7 +91,7 @@
   "metadata.amqp.exchange.type" "topic")
 
 (cc/defprop-optboolean exchange-durable?
-  "Whether or not the AMQP is durable."
+  "Whether or not the AMQP exchange is durable."
   [props config-valid configs]
   "metadata.amqp.exchange.durable" true)
 

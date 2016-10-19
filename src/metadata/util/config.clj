@@ -80,15 +80,41 @@
   [props config-valid configs]
   "metadata.amqp.uri" "amqp://guest:guestPW@localhost:5672")
 
-(cc/defprop-optstr amqp-exchange
+(cc/defprop-optstr exchange-name
   "The exchange name for the AMQP server"
   [props config-valid configs]
   "metadata.amqp.exchange.name" "de")
 
-(cc/defprop-optstr amqp-exchange-type
+(cc/defprop-optstr exchange-type
   "The name of the AMQP exchange type"
   [props config-valid configs]
   "metadata.amqp.exchange.type" "topic")
+
+(cc/defprop-optboolean exchange-durable?
+  "Whether or not the AMQP exchange is durable."
+  [props config-valid configs]
+  "metadata.amqp.exchange.durable" true)
+
+(cc/defprop-optboolean exchange-auto-delete?
+  "Whether or not the AMQP exchange is automatically deleted."
+  [props config-valid configs]
+  "metadata.amqp.exchange.auto-delete" false)
+
+(cc/defprop-optstr queue-name
+  "The name of the queue connected to the exchange on the AMQP broker."
+  [props config-valid configs]
+  "metadata.amqp.queue.name" "events.metadata.queue")
+
+(cc/defprop-optboolean queue-durable?
+  "Whether or not the AMQP queue is durable."
+  [props config-valid configs]
+  "metadata.amqp.queue.durable" true)
+
+(cc/defprop-optboolean queue-auto-delete?
+  "Whether or not the AMQP queue is automatically deleted."
+  [props config-valid configs]
+  "metadata.amqp.queue.auto-delete" false)
+
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

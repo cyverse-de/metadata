@@ -5,6 +5,8 @@
             [me.raynes.fs :as fs]
             [metadata.util.db :as db]
             [metadata.util.config :as config]
+            [metadata.amqp :as amqp]
+            [metadata.events :as events]
             [service-logging.thread-context :as tc]))
 
 (defn dev-handler
@@ -13,11 +15,21 @@
     (require 'metadata.routes)
     ((eval 'metadata.routes/app) req)))
 
+(defn init-amqp
+  []
+  (let [amqp-handlers {"events.metadata.ping" events/ping-handler}
+        exchange-cfg  (events/exchange-config)
+        queue-cfg     (events/queue-config)
+        channel       (amqp/connect exchange-cfg queue-cfg (keys amqp-handlers))]
+    (amqp/channel channel)
+    (.start (Thread. (fn [] (amqp/subscribe channel (:name queue-cfg) amqp-handlers))))))
+
 (defn init-service
   ([]
     (init-service config/default-config-file))
   ([cfg-path]
     (config/load-config-from-file cfg-path)
+    (init-amqp)
     (db/define-database)))
 
 (defn cli-options

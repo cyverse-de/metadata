@@ -80,7 +80,7 @@
   [props config-valid configs]
   "metadata.amqp.uri" "amqp://guest:guestPW@localhost:5672")
 
-(cc/defprop-optstr amqp-exchange
+(cc/defprop-optstr exchange-name
   "The exchange name for the AMQP server"
   [props config-valid configs]
   "metadata.amqp.exchange.name" "de")
@@ -89,6 +89,7 @@
   "The name of the AMQP exchange type"
   [props config-valid configs]
   "metadata.amqp.exchange.type" "topic")
+
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

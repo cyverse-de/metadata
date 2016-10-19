@@ -90,6 +90,11 @@
   [props config-valid configs]
   "metadata.amqp.exchange.type" "topic")
 
+(cc/defprop-optboolean exchange-durable?
+  "Whether or not the AMQP is durable."
+  [props config-valid configs]
+  "metadata.amqp.exchange.durable" true)
+
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

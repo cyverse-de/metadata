@@ -17,4 +17,5 @@
     (is (= (config/db-password) "notprod"))
     (is (= (config/amqp-uri) "amqp://guest:guestPW@localhost:5672"))
     (is (= (config/exchange-name) "de"))
-    (is (= (config/exchange-type) "topic"))))
+    (is (= (config/exchange-type) "topic"))
+    (is (config/exchange-durable?))))

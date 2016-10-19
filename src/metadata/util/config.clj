@@ -95,6 +95,11 @@
   [props config-valid configs]
   "metadata.amqp.exchange.durable" true)
 
+(cc/defprop-optboolean exchange-auto-delete?
+  "Whether or not the AMQP exchange is automatically deleted."
+  [props config-valid configs]
+  "metadata.amqp.exchange.auto-delete" false)
+
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

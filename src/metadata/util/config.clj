@@ -85,7 +85,7 @@
   [props config-valid configs]
   "metadata.amqp.exchange.name" "de")
 
-(cc/defprop-optstr amqp-exchange-type
+(cc/defprop-optstr exchange-type
   "The name of the AMQP exchange type"
   [props config-valid configs]
   "metadata.amqp.exchange.type" "topic")

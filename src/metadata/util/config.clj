@@ -90,11 +90,6 @@
   [props config-valid configs]
   "metadata.amqp.exchange.type" "topic")
 
-(cc/defprop-optstr amqp-exchange-type
-  "The name of the AMQP exchange type"
-  [props config-valid configs]
-  "metadata.amqp.exchange.type" "topic")
-
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

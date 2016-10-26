@@ -18,7 +18,6 @@ This program requires a configuration file to run, passed via the `--config` com
 metadata.app.listen-port = 60000
 
 # Database settings.
-metadata.db.driver      = org.postgresql.Driver
 metadata.db.subprotocol = postgresql
 metadata.db.host        = localhost
 metadata.db.port        = 5432

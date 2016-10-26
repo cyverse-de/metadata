@@ -8,7 +8,6 @@
     (config/load-config-from-file "conf/test/empty.properties")
     (is (= (config/listen-port) 60000))
     (is (= (config/environment-name) "docker-compose"))
-    (is (= (config/db-driver-class) "org.postgresql.Driver"))
     (is (= (config/db-subprotocol) "postgresql"))
     (is (= (config/db-host) "dedb"))
     (is (= (config/db-port) "5432"))

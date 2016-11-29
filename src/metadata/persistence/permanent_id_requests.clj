@@ -1,7 +1,6 @@
 (ns metadata.persistence.permanent-id-requests
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.db :only [millis-from-timestamp]]
-        [kameleon.queries :only [add-query-limit add-query-offset add-query-sorting]]
         [korma.core :exclude [update]]
         [korma.db :only [transaction]])
   (:require [kameleon.db :as db]

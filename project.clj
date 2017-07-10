@@ -26,7 +26,7 @@
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
                  [org.cyverse/common-swagger-api "2.8.1"]
-                 [org.cyverse/kameleon "3.0.2-SNAPSHOT"]
+                 [org.cyverse/kameleon "3.0.2"]
                  [org.cyverse/service-logging "2.8.0"]
                  [org.cyverse/event-messages "0.0.1"]
                  [sanitize-filename "0.1.0"]

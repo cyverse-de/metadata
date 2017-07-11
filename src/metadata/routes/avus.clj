@@ -9,6 +9,13 @@
   (context "/avus" []
     :tags ["avus"]
 
+    (GET "/" []
+           :query [params AvuSearchQueryParams]
+           :return AvuList
+           :summary "List AVUs."
+           :description "Lists AVUs matching parameters in the query string."
+           (ok (avus/list-avus params)))
+
     (POST "/filter-targets" []
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [target-types target-ids avus]} FilterByAvusRequest]

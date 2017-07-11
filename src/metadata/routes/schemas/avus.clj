@@ -23,7 +23,7 @@
    (s/optional-key :avus) (describe [(s/recursive #'Avu)] "AVUs attached to this AVU")})
 
 (s/defschema AvuList
-  {:avus (describe [Avu] "The list of AVUs associated with the target")})
+  {:avus (describe [Avu] "The list of AVUs")})
 
 (s/defschema AvuRequest
   (-> Avu

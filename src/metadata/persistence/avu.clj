@@ -136,7 +136,20 @@
                :avus attached-avus)
         (dissoc :attribute :target_type))))
 
+(defn- find-avus
+  "Searches for AVUs matching the given criteria."
+  [attributes target-types values units]
+  (let [add-criterion (fn [query f vs] (if (seq vs) (where query {f [in vs]}) query))]
+    (-> (select* :avus)
+        (add-criterion :attribute attributes)
+        (add-criterion :target_type target-types)
+        (add-criterion :value values)
+        (add-criterion :unit units)
+        (select))))
+
 (defn avu-list
   "Lists AVUs for the given target."
-  [target-type target-id]
-  (map format-avu (get-avus-for-target target-type target-id)))
+  ([target-type target-id]
+   (map format-avu (get-avus-for-target target-type target-id)))
+  ([attributes target-types values units]
+   (map format-avu (find-avus attributes target-types values units))))

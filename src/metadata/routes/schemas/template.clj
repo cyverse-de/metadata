@@ -41,6 +41,9 @@
    :is_default (describe Boolean "True if this value is the default for its enumeration type")
    :value      (describe String "The name of the enumeration value")})
 
+(s/defschema TemplateAttrSettings
+  {(describe s/Keyword "Settings key") (describe s/Any "Settings value")})
+
 (s/defschema MetadataTemplateAttr
   {:id
    (describe UUID "The attribute ID")
@@ -73,7 +76,10 @@
    ValidValueTypeEnum
 
    (s/optional-key :values)
-   (describe [TemplateAttrEnumValue] "The list of possible values for enumeration types")})
+   (describe [TemplateAttrEnumValue] "The list of possible values for enumeration types")
+
+   (s/optional-key :settings)
+   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")})
 
 (s/defschema MetadataTemplate
   (assoc MetadataTemplateListEntry
@@ -107,7 +113,10 @@
    ValidValueTypeEnum
 
    (s/optional-key :values)
-   (describe [TemplateAttrEnumValueUpdate] "The list of possible values for enumeration types")})
+   (describe [TemplateAttrEnumValueUpdate] "The list of possible values for enumeration types")
+
+   (s/optional-key :settings)
+   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")})
 
 (s/defschema MetadataTemplateUpdate
   {:attributes

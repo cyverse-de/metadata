@@ -2,7 +2,8 @@
   (:use [clojure-commons.core :only [remove-nil-values]]
         [clojure-commons.assertions :only [assert-found]]
         [korma.core :exclude [update]])
-  (:require [korma.core :as sql]))
+  (:require [cheshire.core :as json]
+            [korma.core :as sql]))
 
 (defn- add-deleted-where-clause
   [query hide-deleted?]
@@ -41,11 +42,19 @@
     (assoc attr :values (list-attr-enum-values id))
     attr))
 
+(defn- format-attr-settings
+  [{:keys [settings] :as attr}]
+  (if settings
+    (assoc attr :settings (json/decode settings))
+    attr))
+
 (defn- format-attribute
   [attr]
   (->> attr
+       format-attr-settings
        add-attr-synonyms
-       add-attr-enum-values))
+       add-attr-enum-values
+       remove-nil-values))
 
 (defn- attr-fields
   [query]
@@ -54,6 +63,7 @@
           [:attr.name        :name]
           [:attr.description :description]
           [:attr.required    :required]
+          [:attr.settings    :settings]
           [:value_type.name  :type]
           [:attr.created_by  :created_by]
           [:attr.created_on  :created_on]
@@ -127,6 +137,12 @@
   [type-name]
   (:id (first (select :value_types (where {:name type-name})))))
 
+(defn- save-attr-settings
+  "Saves arbitrary JSON settings for an attribute."
+  [attr-id settings]
+  (exec-raw ["UPDATE attributes SET settings = CAST ( ? AS json ) WHERE id = ?"
+             [(cast Object (json/encode settings)) attr-id]]))
+
 (defn- prepare-attr-insertion
   [user {:keys [type] :as attribute}]
   (->> (assoc (select-keys attribute [:id :name :description :required])
@@ -136,8 +152,11 @@
        (remove-nil-values)))
 
 (defn- insert-attribute
-  [user attribute]
-  (:id (insert :attributes (values (prepare-attr-insertion user attribute)))))
+  [user {:keys [settings] :as attribute}]
+  (let [attr-id (:id (insert :attributes (values (prepare-attr-insertion user attribute))))]
+    (when settings
+      (save-attr-settings attr-id settings))
+    attr-id))
 
 (defn- add-template-attribute
   [user template-id order {enum-values :values :as attribute}]
@@ -178,10 +197,12 @@
        (remove-nil-values)))
 
 (defn- update-attribute
-  [user attr-id attr]
+  [user attr-id {:keys [settings] :as attr}]
   (sql/update :attributes
           (set-fields (prepare-attr-update user attr))
           (where {:id attr-id}))
+  (when settings
+    (save-attr-settings attr-id settings))
   (:id (first (select :attributes (where {:id attr-id})))))
 
 (defn- attr-exists?

@@ -263,3 +263,14 @@
           (set-fields (prepare-template-deletion user))
           (where {:id template-id}))
   nil)
+
+(defn- used-attribute-subselect
+  []
+  (subselect [:template_attrs :ta] (where {:ta.attribute_id :attributes.id})))
+
+(defn permanently-delete-template
+  [template-id]
+  (assert-found (get-metadata-template template-id) "metadata template" template-id)
+  (delete :templates (where {:id template-id}))
+  (delete :attributes (where (not (exists (used-attribute-subselect)))))
+  nil)

@@ -74,5 +74,8 @@
   (transaction (view-template (tp/update-template user template-id template))))
 
 (defn delete-template
-  [{:keys [user]} template-id]
-  (transaction (tp/delete-template user template-id)))
+  [{:keys [user permanent]} template-id]
+  (transaction
+   (if permanent
+     (tp/permanently-delete-template template-id)
+     (tp/delete-template user template-id))))

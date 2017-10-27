@@ -138,3 +138,8 @@
   (assoc StandardUserQueryParams
     (s/optional-key :attachment)
     (describe Boolean "Download file contents as attachment. Default true.")))
+
+(s/defschema TemplateDeletionQueryParams
+  (assoc StandardUserQueryParams
+    (s/optional-key :permanent)
+    (describe Boolean "If true, completely remove the template from the database.")))

@@ -100,7 +100,7 @@
 
     (DELETE "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
-      :query [params StandardUserQueryParams]
+      :query [params TemplateDeletionQueryParams]
       :summary "Mark a Metadata Template as Deleted"
       :description "This endpoint allows administrators to mark existing metadata templates as
       deleted."

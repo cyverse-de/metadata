@@ -263,3 +263,16 @@
           (set-fields (prepare-template-deletion user))
           (where {:id template-id}))
   nil)
+
+;; TODO: depending on how synonyms are going to be implemented, it may be necessary to check for existing synonyms
+;; before deleting the attributes as well.
+(defn- used-attribute-subselect
+  []
+  (subselect [:template_attrs :ta] (where {:ta.attribute_id :attributes.id})))
+
+(defn permanently-delete-template
+  [template-id]
+  (assert-found (get-metadata-template template-id) "metadata template" template-id)
+  (delete :templates (where {:id template-id}))
+  (delete :attributes (where (not (exists (used-attribute-subselect)))))
+  nil)

@@ -28,7 +28,7 @@
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
-      :responses {200      {:schema      UpdateAttachedTagsResponse
+      :responses {200      {:schema      AttachedTagsListing
                             :description "The tags were attached or detached from the file or folder"}
                   400      {:schema      ErrorResponseBadTagRequest
                             :description "The `type` wasn't provided or had a value other than `attach` or `detach`;

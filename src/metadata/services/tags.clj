@@ -116,6 +116,15 @@
     (get-tag-target-details tag-ids)))
 
 
+(defn delete-all-attached-tags
+  "Permanently deletes all tag attachments that have been added to a file or folder by the current user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  (db/delete-all-attached-tags user))
+
+
 (defn list-attached-tags
   "Lists the tags attached to a data item.
 

@@ -142,6 +142,16 @@
                             (where {:attacher_id user}))]})))
 
 
+(defn delete-all-attached-tags
+  "Deletes all tag attachments that were added by a user.
+
+   Parameters:
+     user - the user name"
+  [user]
+  (delete :attached_tags
+          (where {:attacher_id user})))
+
+
 (defn select-attached-tags
   "Retrieves the set of tags a user has attached to something.
 

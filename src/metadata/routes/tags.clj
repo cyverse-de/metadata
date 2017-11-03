@@ -23,6 +23,20 @@
       "This endpoint lists all tags that have been attached to a file or folder by a user."
       (ok (tags/list-all-attached-tags user)))
 
+    (DELETE "/tags" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      (describe String "Empty response")
+                            :description "The attached tags were successfully deleted"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "Permanently Delete All Attached Tags for a User"
+      :description
+      "This endpoint permanently deletes all tag attachments that have been added to a file or folder by a user."
+      (tags/delete-all-attached-tags user)
+      (ok ""))
+
     (GET "/:data-id/tags" []
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]

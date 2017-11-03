@@ -116,7 +116,7 @@
   nil)
 
 
-(defn- attached-tags-base-query
+(defn- tags-base-query
   "Creates the base query for attached tags.
 
    Returns:
@@ -124,6 +124,16 @@
   []
   (-> (select* :tags)
       (fields :id :value :description)))
+
+
+(defn select-tags-defined-by
+  "Lists all tags that were defined by a user.
+
+   Parameters:
+     user - The username."
+  [user]
+  (select (tags-base-query)
+    (where {:owner_id user})))
 
 
 (defn select-all-attached-tags
@@ -135,7 +145,7 @@
    Returns:
      A lazy sequence of tag resources"
   [user]
-  (select (attached-tags-base-query)
+  (select (tags-base-query)
     (where {:owner_id user
             :id       [in (subselect :attached_tags
                             (fields :tag_id)
@@ -162,7 +172,7 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (select (attached-tags-base-query)
+  (select (tags-base-query)
     (where {:owner_id user
             :id       [in (subselect :attached_tags
                             (fields :tag_id)

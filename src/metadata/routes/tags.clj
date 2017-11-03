@@ -76,6 +76,19 @@ tags to the indicated file or folder, or it detaches the set."
   (context "/tags" []
     :tags ["tags"]
 
+    (GET "/" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      TagList
+                            :description "The tags are listed in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List tags defined by a user."
+      :description
+      "This endpoint lists all of the tags defined by a user."
+      (ok (tags/list-tags-defined-by user)))
+
     (GET "/suggestions" []
       :query [{:keys [user contains limit]} TagSuggestQueryParams]
       :responses {200      {:schema      TagList

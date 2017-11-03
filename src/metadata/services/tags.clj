@@ -136,6 +136,15 @@
     {:tags (map #(dissoc % :owner_id) tags)}))
 
 
+(defn list-tags-defined-by
+  "Lists all of the tags defined by a user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  {:tags (db/select-tags-defined-by user)})
+
+
 (defn suggest-tags
   "Given a tag value fragment, this function will return a list tags whose values contain that
    fragment.

@@ -130,10 +130,22 @@
   "Lists all tags that were defined by a user.
 
    Parameters:
-     user - The username."
+     user - The username.
+
+   Returns:
+     A lazy sequence of tag information."
   [user]
   (select (tags-base-query)
     (where {:owner_id user})))
+
+
+(defn delete-tags-defined-by
+  "Deletes all tags that were defined by a user.
+
+   Parameters:
+     user - The username."
+  [user]
+  (delete :tags (where {:owner_id user})))
 
 
 (defn select-all-attached-tags

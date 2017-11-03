@@ -145,6 +145,15 @@
   {:tags (db/select-tags-defined-by user)})
 
 
+(defn delete-tags-defined-by
+  "Deletes all of the tags defined by a user. Any tag that is attached to a target will automatically be detached.
+
+   Parameters:
+     user - the user name of the requestor."
+  [user]
+  (db/delete-tags-defined-by user))
+
+
 (defn suggest-tags
   "Given a tag value fragment, this function will return a list tags whose values contain that
    fragment.

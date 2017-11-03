@@ -76,33 +76,6 @@ tags to the indicated file or folder, or it detaches the set."
   (context "/tags" []
     :tags ["tags"]
 
-    (GET "/" []
-      :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      TagList
-                            :description "The tags are listed in the response"}
-                  500      {:schema      ErrorResponseUnchecked
-                            :description "Unchecked errors"}
-                  :default {:schema      ErrorResponse
-                            :description "All other errors"}}
-      :summary "List Tags Defined by a User"
-      :description
-      "This endpoint lists all of the tags defined by a user."
-      (ok (tags/list-tags-defined-by user)))
-
-    (DELETE "/" []
-      :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      (describe String "Empty response")
-                            :description "The tags were successfully deleted"}
-                  500      {:schema      ErrorResponseUnchecked
-                            :description "Unchecked errors"}
-                  :default {:schema      ErrorResponse
-                            :description "All other errors"}}
-      :summary "Delete Tags Defined by a User"
-      :description
-      "This endpoint deletes all tags defined by the current user. Corresponding attached tags will also be deleted."
-      (tags/delete-tags-defined-by user)
-      (ok ""))
-
     (GET "/suggestions" []
       :query [{:keys [user contains limit]} TagSuggestQueryParams]
       :responses {200      {:schema      TagList
@@ -119,6 +92,33 @@ tags to the indicated file or folder, or it detaches the set."
 Given a textual fragment of a tag's value, this endpoint will list up to a given number of the
 authenticated user's tags that contain the fragment."
       (ok (tags/suggest-tags user contains limit)))
+
+    (GET "/user" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      TagList
+                            :description "The tags are listed in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List Tags Defined by a User"
+      :description
+      "This endpoint lists all of the tags defined by a user."
+      (ok (tags/list-tags-defined-by user)))
+
+    (DELETE "/user" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      (describe String "Empty response")
+                            :description "The tags were successfully deleted"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "Delete Tags Defined by a User"
+      :description
+      "This endpoint deletes all tags defined by the current user. Corresponding attached tags will also be deleted."
+      (tags/delete-tags-defined-by user)
+      (ok ""))
 
     (POST "/user" []
       :query [{:keys [user]} StandardUserQueryParams]

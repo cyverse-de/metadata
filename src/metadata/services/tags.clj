@@ -18,12 +18,12 @@
   (format-tag (db/get-tag id)))
 
 (defn- get-tag-target-details
-  [tag-ids]
+  [tag-ids & [{:keys [include-detached?]}]]
   (letfn [(fmt-tgt ([{id :target_id type :target_type}]
                      {:id id :type (str type)}))
           (get-tag-detail ([id]
                             (assoc (get-tag-details id)
-                              :targets (map fmt-tgt (db/select-tag-targets id)))))]
+                              :targets (map fmt-tgt (db/select-tag-targets id include-detached?)))))]
     {:tags (map get-tag-detail tag-ids)}))
 
 
@@ -113,7 +113,7 @@
      user - The user name of the requestor."
   [user]
   (let [tag-ids (map :id (db/select-all-attached-tags user))]
-    (get-tag-target-details tag-ids)))
+    (get-tag-target-details tag-ids {:include-detached? true})))
 
 
 (defn delete-all-attached-tags
@@ -133,7 +133,7 @@
      data-id - The data-id from the request.  It should be a filesystem UUID."
   [user data-id]
   (let [tags (db/select-attached-tags user data-id)]
-    {:tags (map #(dissoc % :owner_id) tags)}))
+    {:tags tags}))
 
 
 (defn list-tags-defined-by
@@ -164,7 +164,7 @@
      limit - The `limit` query parameter. It should be a positive integer."
   [user contains limit]
   (let [matches (db/get-tags-by-value user (str "%" contains "%") limit)]
-    {:tags (map #(dissoc % :owner_id) matches)}))
+    {:tags matches}))
 
 
 (defn- prepare-tag-update

@@ -31,6 +31,16 @@
       (fields :id)
       (where {:owner_id owner :id [in tag-ids]}))))
 
+(defn- tags-base-query
+  "Creates the base query for attached tags.
+
+   Returns:
+     The base query."
+  []
+  (-> (select* :tags)
+      (fields :id :value :description)))
+
+
 (defn get-tags-by-value
   "Retrieves up to a certain number of the tags owned by a given user that have a value matching a
    given pattern. If no max number is provided, all tags will be returned.
@@ -45,8 +55,7 @@
    Returns:
      A lazy sequence of tags."
   [owner value-glob & [max-results]]
-  (let [query  (-> (select* :tags)
-                   (fields :id :value :description)
+  (let [query  (-> (tags-base-query)
                    (where (and {:owner_id owner}
                                (raw (str "lower(value) like lower('" value-glob "')")))))
         query' (if max-results
@@ -114,16 +123,6 @@
   (delete :attached_tags (where {:tag_id tag-id}))
   (delete :tags (where {:id tag-id}))
   nil)
-
-
-(defn- tags-base-query
-  "Creates the base query for attached tags.
-
-   Returns:
-     The base query."
-  []
-  (-> (select* :tags)
-      (fields :id :value :description)))
 
 
 (defn select-tags-defined-by
@@ -251,6 +250,9 @@
 
    Returns:
      It returns the attachment records for the tags."
-  [^ISeq tag-id]
-  (select :attached_tags
-    (where {:tag_id tag-id :detached_on nil})))
+  [^ISeq tag-id & [include-detached?]]
+  (letfn [(add-detached-filter [query] (if include-detached? query (where query {:detached_on nil})))]
+    (-> (select* :attached_tags)
+        (where {:tag_id tag-id})
+        (add-detached-filter)
+        (select))))

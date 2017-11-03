@@ -106,6 +106,16 @@
              :parameter type})))
 
 
+(defn list-all-attached-tags
+  "Lists all tags attached to any data item by the current user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  (let [tag-ids (map :id (db/select-all-attached-tags user))]
+    (get-tag-target-details tag-ids)))
+
+
 (defn list-attached-tags
   "Lists the tags attached to a data item.
 

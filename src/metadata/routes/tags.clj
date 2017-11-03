@@ -10,6 +10,19 @@
   (context "/filesystem/data" []
     :tags ["tags"]
 
+    (GET "/tags" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      AttachedTagsListing
+                            :description "Attached tags are listied in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List All Attached Tags for a User"
+      :description
+      "This endpoint lists all tags that have been attached to a file or folder by a user."
+      (ok (tags/list-all-attached-tags user)))
+
     (GET "/:data-id/tags" []
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]

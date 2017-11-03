@@ -115,6 +115,33 @@
   (delete :tags (where {:id tag-id}))
   nil)
 
+
+(defn- attached-tags-base-query
+  "Creates the base query for attached tags.
+
+   Returns:
+     The base query."
+  []
+  (-> (select* :tags)
+      (fields :id :value :description)))
+
+
+(defn select-all-attached-tags
+  "Retrieves the set of tags that a user has attached to anything.
+
+   Parameters:
+     user - the user name
+
+   Returns:
+     A lazy sequence of tag resources"
+  [user]
+  (select (attached-tags-base-query)
+    (where {:owner_id user
+            :id       [in (subselect :attached_tags
+                            (fields :tag_id)
+                            (where {:attacher_id user}))]})))
+
+
 (defn select-attached-tags
   "Retrieves the set of tags a user has attached to something.
 
@@ -125,8 +152,7 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (select :tags
-    (fields :id :value :description)
+  (select (attached-tags-base-query)
     (where {:owner_id user
             :id       [in (subselect :attached_tags
                             (fields :tag_id)

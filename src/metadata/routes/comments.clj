@@ -20,7 +20,21 @@
                             :description "All other errors"}}
       :summary "List All Comments Added by a User"
       :description "This endpoint allows an administrator to list all comments that were entered by a single user."
-      (ok (comments/list-user-comments commenter-id)))))
+      (ok (comments/list-user-comments commenter-id)))
+
+    (DELETE "/:commenter-id" []
+      :path-params [commenter-id :- CommenterId]
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      (describe String "Empty response")
+                            :description "The comments were deleted successfully"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "Delete All Comments Added by a User"
+      :description "This endpoint allows an administrator to delete all comments that were entered by a single user."
+      (comments/delete-user-comments commenter-id)
+      (ok ""))))
 
 (defroutes data-comment-routes
   (context "/filesystem/data" []

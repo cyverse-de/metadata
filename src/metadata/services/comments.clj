@@ -64,6 +64,14 @@
   [commenter-id]
   {:comments (map format-comment-details (db/select-user-comments commenter-id))})
 
+(defn delete-user-comments
+  "Deletes all comments taht were added by a given user.
+
+   Parameters:
+     commenter-id - the username of the person who added the comments."
+  [commenter-id]
+  (db/delete-user-comments commenter-id))
+
 (defn list-comments
   "Returns a list of comments attached to a given target ID.
 

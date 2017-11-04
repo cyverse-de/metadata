@@ -95,6 +95,14 @@
       (where {:owner_id commenter-id})
       select))
 
+(defn delete-user-comments
+  "Deletes all comments that were added by a single user.
+
+   Parameters:
+     commenter-id - The username of the person who added the comments"
+  [commenter-id]
+  (delete :comments (where {:owner_id commenter-id})))
+
 (defn retract-comment
   "Marks a comment as retracted. It assumes the retracting user is an authenticated user. If the
    comment doesn't exist, it silently fails.

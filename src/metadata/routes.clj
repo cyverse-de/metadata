@@ -34,6 +34,7 @@
                       {:name "admin-ontologies", :description "Ontology Hierarchy Administration"}
                       {:name "admin-data-comments", :description "Admin Data Item Comment Management"}
                       {:name "admin-app-comments", :description "Admin App Comment Management"}
+                      {:name "admin-comments", :description "General Comment Administration"}
                       {:name "tags", :description "Tags Management"}
                       {:name "template-info", :description "Template Information"}
                       {:name "template-administration", :description "Template Administration"}]}})
@@ -52,6 +53,7 @@
     comment-routes/app-comment-routes
     comment-routes/admin-data-comment-routes
     comment-routes/admin-app-comment-routes
+    comment-routes/admin-comment-routes
     favorites-routes/favorites
     ontology-routes/ontologies
     ontology-routes/admin-ontologies

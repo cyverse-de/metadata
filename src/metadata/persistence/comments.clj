@@ -73,6 +73,28 @@
   [target-id]
   (map fmt-comment (select :comments (where {:target_id target-id :deleted false}))))
 
+(defn select-user-comments
+  "Retrieves a listing of all comments that were added by a single user.
+
+   Parameters:
+     commenter-id - The username of the person who added the comments
+
+   Returns:
+     A lazy sequence of detailed comment information."
+  [commenter-id]
+  (-> (select* :comments)
+      (fields :id
+              [:owner_id :commenter]
+              :post_time
+              :retracted
+              :retracted_by
+              [:value :comment]
+              :deleted
+              :target_id
+              :target_type)
+      (where {:owner_id commenter-id})
+      select))
+
 (defn retract-comment
   "Marks a comment as retracted. It assumes the retracting user is an authenticated user. If the
    comment doesn't exist, it silently fails.

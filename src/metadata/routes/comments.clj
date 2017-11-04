@@ -5,6 +5,23 @@
         [ring.util.http-response :only [ok]])
   (:require [metadata.services.comments :as comments]))
 
+(defroutes admin-comment-routes
+  (context "/admin/comments" []
+    :tags ["admin-comments"]
+
+    (GET "/:commenter-id" []
+      :path-params [commenter-id :- CommenterId]
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      CommentDetailsList
+                            :description "Comment details are listed in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List All Comments Added by a User"
+      :description "This endpoint allows an administrator to list all comments that were entered by a single user."
+      (ok (comments/list-user-comments commenter-id)))))
+
 (defroutes data-comment-routes
   (context "/filesystem/data" []
     :tags ["data-comments"]

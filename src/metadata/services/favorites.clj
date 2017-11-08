@@ -2,6 +2,19 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [metadata.persistence.favorites :as db]))
 
+(defn- determine-filesystem-entity-types
+  "Determines the set of entity types from the selected entity type in the request.
+
+   Parameters:
+     entity-type - the entity type from the request.
+
+   Returns:
+     The corresonding set of entity types."
+  [entity-type]
+  (if (= "any" entity-type)
+    ["file" "folder"]
+    [entity-type]))
+
 
 (defn add-favorite
   "This function marks a given data item as a favorite of the authenticated user.
@@ -43,11 +56,20 @@
      entity-type - This is the value of the `entity-type` query parameter. It should be a string
                    containing one of the following: any|file|folder."
   [user entity-type]
-  (let [entity-types (if (= "any" entity-type)
-                       ["file" "folder"]
-                       [entity-type])]
+  (let [entity-types (determine-filesystem-entity-types entity-type)]
     (->> (db/select-favorites-of-type user entity-types)
          (hash-map :filesystem))))
+
+
+(defn remove-all-favorites
+  "Removes all data resources marked as favorites for the authenticated user.
+
+   Parameters:
+     user - the user removing the favorites.
+     entity-type - This is the value of the `entity-type` query parameter. It should be a string
+                   containing one of the following: any|file|folder."
+  [user entity-type]
+  (db/delete-favorites-of-type user (determine-filesystem-entity-types entity-type)))
 
 
 (defn filter-favorites

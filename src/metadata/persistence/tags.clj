@@ -31,6 +31,16 @@
       (fields :id)
       (where {:owner_id owner :id [in tag-ids]}))))
 
+(defn- tags-base-query
+  "Creates the base query for attached tags.
+
+   Returns:
+     The base query."
+  []
+  (-> (select* :tags)
+      (fields :id :value :description)))
+
+
 (defn get-tags-by-value
   "Retrieves up to a certain number of the tags owned by a given user that have a value matching a
    given pattern. If no max number is provided, all tags will be returned.
@@ -45,8 +55,7 @@
    Returns:
      A lazy sequence of tags."
   [owner value-glob & [max-results]]
-  (let [query  (-> (select* :tags)
-                   (fields :id :value :description)
+  (let [query  (-> (tags-base-query)
                    (where (and {:owner_id owner}
                                (raw (str "lower(value) like lower('" value-glob "')")))))
         query' (if max-results
@@ -115,6 +124,55 @@
   (delete :tags (where {:id tag-id}))
   nil)
 
+
+(defn select-tags-defined-by
+  "Lists all tags that were defined by a user.
+
+   Parameters:
+     user - The username.
+
+   Returns:
+     A lazy sequence of tag information."
+  [user]
+  (select (tags-base-query)
+    (where {:owner_id user})))
+
+
+(defn delete-tags-defined-by
+  "Deletes all tags that were defined by a user.
+
+   Parameters:
+     user - The username."
+  [user]
+  (delete :tags (where {:owner_id user})))
+
+
+(defn select-all-attached-tags
+  "Retrieves the set of tags that a user has attached to anything.
+
+   Parameters:
+     user - the user name
+
+   Returns:
+     A lazy sequence of tag resources"
+  [user]
+  (select (tags-base-query)
+    (where {:owner_id user
+            :id       [in (subselect :attached_tags
+                            (fields :tag_id)
+                            (where {:attacher_id user}))]})))
+
+
+(defn delete-all-attached-tags
+  "Deletes all tag attachments that were added by a user.
+
+   Parameters:
+     user - the user name"
+  [user]
+  (delete :attached_tags
+          (where {:attacher_id user})))
+
+
 (defn select-attached-tags
   "Retrieves the set of tags a user has attached to something.
 
@@ -125,8 +183,7 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (select :tags
-    (fields :id :value :description)
+  (select (tags-base-query)
     (where {:owner_id user
             :id       [in (subselect :attached_tags
                             (fields :tag_id)
@@ -193,6 +250,9 @@
 
    Returns:
      It returns the attachment records for the tags."
-  [^ISeq tag-id]
-  (select :attached_tags
-    (where {:tag_id tag-id :detached_on nil})))
+  [^ISeq tag-id & [include-detached?]]
+  (letfn [(add-detached-filter [query] (if include-detached? query (where query {:detached_on nil})))]
+    (-> (select* :attached_tags)
+        (where {:tag_id tag-id})
+        (add-detached-filter)
+        (select))))

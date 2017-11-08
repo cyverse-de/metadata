@@ -9,6 +9,13 @@
   (context "/favorites" []
     :tags ["favorites"]
 
+    (DELETE "/filesystem" []
+      :query [{:keys [user entity-type]} FavoritesDataListingParams]
+      :summary "Remove All Data Resources from Favorites"
+      :description "This endpoint allows users to completely clear their list of favorite data resources."
+      (fave/remove-all-favorites user entity-type)
+      (ok))
+
     (GET "/filesystem" []
       :query [{:keys [user entity-type]} FavoritesDataListingParams]
       :return (describe DataIdList "The UUIDs of the favorite files and folders of the user.")

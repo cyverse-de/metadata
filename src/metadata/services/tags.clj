@@ -18,12 +18,12 @@
   (format-tag (db/get-tag id)))
 
 (defn- get-tag-target-details
-  [tag-ids]
+  [tag-ids & [{:keys [include-detached?]}]]
   (letfn [(fmt-tgt ([{id :target_id type :target_type}]
                      {:id id :type (str type)}))
           (get-tag-detail ([id]
                             (assoc (get-tag-details id)
-                              :targets (map fmt-tgt (db/select-tag-targets id)))))]
+                              :targets (map fmt-tgt (db/select-tag-targets id include-detached?)))))]
     {:tags (map get-tag-detail tag-ids)}))
 
 
@@ -106,6 +106,25 @@
              :parameter type})))
 
 
+(defn list-all-attached-tags
+  "Lists all tags attached to any data item by the current user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  (let [tag-ids (map :id (db/select-all-attached-tags user))]
+    (get-tag-target-details tag-ids {:include-detached? true})))
+
+
+(defn delete-all-attached-tags
+  "Permanently deletes all tag attachments that have been added to a file or folder by the current user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  (db/delete-all-attached-tags user))
+
+
 (defn list-attached-tags
   "Lists the tags attached to a data item.
 
@@ -114,7 +133,25 @@
      data-id - The data-id from the request.  It should be a filesystem UUID."
   [user data-id]
   (let [tags (db/select-attached-tags user data-id)]
-    {:tags (map #(dissoc % :owner_id) tags)}))
+    {:tags tags}))
+
+
+(defn list-tags-defined-by
+  "Lists all of the tags defined by a user.
+
+   Parameters:
+     user - The user name of the requestor."
+  [user]
+  {:tags (db/select-tags-defined-by user)})
+
+
+(defn delete-tags-defined-by
+  "Deletes all of the tags defined by a user. Any tag that is attached to a target will automatically be detached.
+
+   Parameters:
+     user - the user name of the requestor."
+  [user]
+  (db/delete-tags-defined-by user))
 
 
 (defn suggest-tags
@@ -127,7 +164,7 @@
      limit - The `limit` query parameter. It should be a positive integer."
   [user contains limit]
   (let [matches (db/get-tags-by-value user (str "%" contains "%") limit)]
-    {:tags (map #(dissoc % :owner_id) matches)}))
+    {:tags matches}))
 
 
 (defn- prepare-tag-update

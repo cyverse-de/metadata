@@ -1,5 +1,6 @@
 (ns metadata.services.comments
-  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:use [clojure-commons.core :only [remove-nil-values]]
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [metadata.persistence.comments :as db]))
 
 
@@ -15,6 +16,10 @@
   (-> comment
       (dissoc :retracted_by)
       (assoc :post_time (.getTime (:post_time comment)))))
+
+(defn- format-comment-details
+  [comment]
+  (remove-nil-values (update comment :post_time #(.getTime %))))
 
 
 (defn add-comment
@@ -34,7 +39,7 @@
 
    Parameters:
      user - the user adding the comment (the comment owner)
-     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item 
+     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item
                being commented on
      data-type - The type of target (`file`|`folder`)
      body - the request body. It should be a map containing the comment"
@@ -50,6 +55,22 @@
      body - the request body. It should be a map containing the comment"
   [user app-id {:keys [comment]}]
   (add-comment user app-id "app" comment))
+
+(defn list-user-comments
+  "Returns a list of comments that were added by a given user.
+
+   Parameters:
+     commenter-id - the username of the person who added the comments."
+  [commenter-id]
+  {:comments (map format-comment-details (db/select-user-comments commenter-id))})
+
+(defn delete-user-comments
+  "Deletes all comments taht were added by a given user.
+
+   Parameters:
+     commenter-id - the username of the person who added the comments."
+  [commenter-id]
+  (db/delete-user-comments commenter-id))
 
 (defn list-comments
   "Returns a list of comments attached to a given target ID.
@@ -106,7 +127,7 @@
 
    Parameters:
      user - the user updating the comment retraction
-     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item 
+     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item
                 owning the comment being modified
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified

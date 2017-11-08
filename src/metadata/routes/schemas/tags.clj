@@ -65,7 +65,7 @@
   (merge TagDetails
     {:targets (describe [AttachedTagTarget] "A list of targets attached to the tag")}))
 
-(s/defschema UpdateAttachedTagsResponse
+(s/defschema AttachedTagsListing
   {:tags (describe [AttachedTagDetails] "A list of tags and their attached targets")})
 
 (s/defschema ErrorResponseBadTagRequest

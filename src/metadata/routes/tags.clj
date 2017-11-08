@@ -10,6 +10,34 @@
   (context "/filesystem/data" []
     :tags ["tags"]
 
+    (GET "/tags" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      AttachedTagsListing
+                            :description "Attached tags are listied in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List All Attached Tags for a User"
+      :description
+      "This endpoint lists all tags that have been attached to a file or folder by a user."
+      (ok (tags/list-all-attached-tags user)))
+
+    (DELETE "/tags" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
+                            :description "The attached tags were successfully deleted"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "Permanently Delete All Attached Tags for a User"
+      :description
+      "This endpoint permanently deletes all tag attachments that have been added to a file or folder by a user."
+      (tags/delete-all-attached-tags user)
+      (ok))
+
     (GET "/:data-id/tags" []
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
@@ -28,7 +56,7 @@
       :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
-      :responses {200      {:schema      UpdateAttachedTagsResponse
+      :responses {200      {:schema      AttachedTagsListing
                             :description "The tags were attached or detached from the file or folder"}
                   400      {:schema      ErrorResponseBadTagRequest
                             :description "The `type` wasn't provided or had a value other than `attach` or `detach`;
@@ -65,6 +93,34 @@ tags to the indicated file or folder, or it detaches the set."
 Given a textual fragment of a tag's value, this endpoint will list up to a given number of the
 authenticated user's tags that contain the fragment."
       (ok (tags/suggest-tags user contains limit)))
+
+    (GET "/user" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :responses {200      {:schema      TagList
+                            :description "The tags are listed in the response"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "List Tags Defined by a User"
+      :description
+      "This endpoint lists all of the tags defined by a user."
+      (ok (tags/list-tags-defined-by user)))
+
+    (DELETE "/user" []
+      :query [{:keys [user]} StandardUserQueryParams]
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
+                            :description "The tags were successfully deleted"}
+                  500      {:schema      ErrorResponseUnchecked
+                            :description "Unchecked errors"}
+                  :default {:schema      ErrorResponse
+                            :description "All other errors"}}
+      :summary "Delete Tags Defined by a User"
+      :description
+      "This endpoint deletes all tags defined by the current user. Corresponding attached tags will also be deleted."
+      (tags/delete-tags-defined-by user)
+      (ok))
 
     (POST "/user" []
       :query [{:keys [user]} StandardUserQueryParams]

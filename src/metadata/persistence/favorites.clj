@@ -80,3 +80,14 @@
   [user target-id]
   (delete :favorites (where {:target_id target-id :owner_id user}))
   nil)
+
+(defn delete-favorites-of-type
+  "Completely clears a user's list of favorites for the given target types.
+
+   Parameters:
+     user         - the authenticated user name
+     target-types - the types of targets to remove from the list."
+  [user target-types]
+  (delete :favorites
+    (where {:owner_id    user
+            :target_type [in (map db/->enum-val target-types)]})))

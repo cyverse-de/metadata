@@ -25,7 +25,8 @@
 
     (DELETE "/tags" []
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      (describe String "Empty response")
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
                             :description "The attached tags were successfully deleted"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
@@ -35,7 +36,7 @@
       :description
       "This endpoint permanently deletes all tag attachments that have been added to a file or folder by a user."
       (tags/delete-all-attached-tags user)
-      (ok ""))
+      (ok))
 
     (GET "/:data-id/tags" []
       :path-params [data-id :- TargetIdPathParam]
@@ -108,7 +109,8 @@ authenticated user's tags that contain the fragment."
 
     (DELETE "/user" []
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      (describe String "Empty response")
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
                             :description "The tags were successfully deleted"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
@@ -118,7 +120,7 @@ authenticated user's tags that contain the fragment."
       :description
       "This endpoint deletes all tags defined by the current user. Corresponding attached tags will also be deleted."
       (tags/delete-tags-defined-by user)
-      (ok ""))
+      (ok))
 
     (POST "/user" []
       :query [{:keys [user]} StandardUserQueryParams]

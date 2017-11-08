@@ -3,7 +3,8 @@
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.comments]
         [ring.util.http-response :only [ok]])
-  (:require [metadata.services.comments :as comments]))
+  (:require [compojure.api.middleware :as middleware]
+            [metadata.services.comments :as comments]))
 
 (defroutes admin-comment-routes
   (context "/admin/comments" []
@@ -25,7 +26,8 @@
     (DELETE "/:commenter-id" []
       :path-params [commenter-id :- CommenterId]
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      (describe String "Empty response")
+      :coercion middleware/no-response-coercion
+      :responses {200      {:schema      nil
                             :description "The comments were deleted successfully"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
@@ -34,7 +36,7 @@
       :summary "Delete All Comments Added by a User"
       :description "This endpoint allows an administrator to delete all comments that were entered by a single user."
       (comments/delete-user-comments commenter-id)
-      (ok ""))))
+      (ok))))
 
 (defroutes data-comment-routes
   (context "/filesystem/data" []

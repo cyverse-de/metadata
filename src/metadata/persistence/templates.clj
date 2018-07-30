@@ -5,6 +5,8 @@
   (:require [cheshire.core :as json]
             [korma.core :as sql]))
 
+(declare format-attribute)
+
 (defn- add-deleted-where-clause
   [query hide-deleted?]
   (if hide-deleted?
@@ -48,14 +50,6 @@
     (assoc attr :settings (json/decode settings))
     attr))
 
-(defn- format-attribute
-  [attr]
-  (->> attr
-       format-attr-settings
-       add-attr-synonyms
-       add-attr-enum-values
-       remove-nil-values))
-
 (defn- attr-fields
   [query]
   (fields query
@@ -69,6 +63,33 @@
           [:attr.created_on  :created_on]
           [:attr.modified_by :modified_by]
           [:attr.modified_on :modified_on]))
+
+(defn- metadata-attribute-base-query
+  []
+  (-> (select* [:attributes :attr])
+      (join [:value_types :value_type] {:attr.value_type_id :value_type.id})
+      attr-fields))
+
+(defn- get-nested-attributes [{parent-id :id}]
+  (-> (metadata-attribute-base-query)
+      (join [:attr_attrs :aa] {:attr.id :aa.child_id})
+      (where {:aa.parent_id parent-id})
+      (order :aa.display_order)
+      select))
+
+(defn- add-nested-attributes [attr]
+  (if-let [nested-attributes (seq (get-nested-attributes attr))]
+    (assoc attr :attributes (mapv format-attribute nested-attributes))
+    attr))
+
+(defn- format-attribute
+  [attr]
+  (->> attr
+       format-attr-settings
+       add-attr-synonyms
+       add-attr-enum-values
+       add-nested-attributes
+       remove-nil-values))
 
 (defn- list-metadata-template-attributes
   [template-id]
@@ -101,10 +122,10 @@
 
 (defn- get-metadata-attribute
   [id]
-  (first  (select [:attributes :attr]
-                  (join [:value_types :value_type] {:attr.value_type_id :value_type.id})
-                  (attr-fields)
-                  (where {:attr.id id}))))
+  (-> (metadata-attribute-base-query)
+      (where {:attr.id id})
+      select
+      first))
 
 (defn view-attribute
   [id]

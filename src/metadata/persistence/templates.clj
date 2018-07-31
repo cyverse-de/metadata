@@ -150,6 +150,12 @@
                                    :attribute_id  attr-id
                                    :display_order order})))
 
+(defn- insert-nested-attr
+  [parent-id order child-id]
+  (insert :attr_attrs (values {:parent_id     parent-id
+                               :child_id      child-id
+                               :display_order order})))
+
 (defn get-value-type-names
   []
   (map #(:name %) (select :value_types (fields :name))))
@@ -179,11 +185,19 @@
       (save-attr-settings attr-id settings))
     attr-id))
 
+(defn- add-nested-attribute
+  [user parent-id order {enum-values :values child-attributes :attributes :as attribute}]
+  (let [attr-id (insert-attribute user attribute)]
+    (insert-nested-attr parent-id order attr-id)
+    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))
+    (dorun (map-indexed (partial add-nested-attribute user attr-id) child-attributes))))
+
 (defn- add-template-attribute
-  [user template-id order {enum-values :values :as attribute}]
+  [user template-id order {enum-values :values child-attributes :attributes :as attribute}]
   (let [attr-id (insert-attribute user attribute)]
     (insert-template-attr template-id order attr-id)
-    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
+    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))
+    (dorun (map-indexed (partial add-nested-attribute user attr-id) child-attributes))))
 
 (defn- prepare-template-insertion
   [user template]

@@ -5,7 +5,7 @@
   (:require [cheshire.core :as json]
             [korma.core :as sql]))
 
-(declare format-attribute)
+(declare format-attribute update-nested-attributes)
 
 (defn- add-deleted-where-clause
   [query hide-deleted?]
@@ -251,28 +251,58 @@
     (update-attribute user id attr)
     (insert-attribute user attr)))
 
+(defn- update-attr-enum-values
+  [attr-id {enum-values :values}]
+  (delete :attr_enum_values (where {:attribute_id attr-id}))
+  (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values)))
+
+(defn- update-nested-attribute
+  [user parent-id order attr]
+  (let [attr-id (insert-or-update-attribute user attr)]
+    (insert-nested-attr parent-id order attr-id)
+    (update-attr-enum-values attr-id attr)
+    (update-nested-attributes user attr-id (:attributes attr))))
+
+(defn- update-nested-attributes
+  [user parent-id children]
+  (delete :attr_attrs (where {:parent_id parent-id}))
+  (dorun (map-indexed (partial update-nested-attribute user parent-id) children)))
+
 (defn- update-template-attribute
-  [user template-id order {enum-values :values id :id :as attr}]
+  [user template-id order attr]
   (let [attr-id (insert-or-update-attribute user attr)]
     (insert-template-attr template-id order attr-id)
-    (delete :attr_enum_values (where {:attribute_id attr-id}))
-    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
+    (update-attr-enum-values attr-id attr)
+    (update-nested-attributes user attr-id (:attributes attr))))
 
 (defn- template-attr-subselect
   []
   (subselect [:template_attrs :ta]
              (where {:attributes.id :ta.attribute_id})))
 
+(defn- child-attr-subselect
+  []
+  (subselect [:attr_attrs :aa]
+             (where {:attributes.id :aa.child_id})))
+
 (defn- attr-synonym-subselect
   []
   (subselect [:attr_synonyms :s]
              (where {:attributes.id :s.synonym_id})))
 
-(defn- delete-orphan-attributes
+(defn- delete-current-orphan-attributes
   []
   (delete :attributes
           (where (and (not (exists (template-attr-subselect)))
+                      (not (exists (child-attr-subselect)))
                       (not (exists (attr-synonym-subselect)))))))
+
+(defn delete-orphan-attributes
+  "Deletes orphan attributes from the database. Deleting an attribute with children can produce more
+   orphans, so this function repeatedly runs the deletion until there are no orphans left. This function
+   should only be called from within a database transaction."
+  []
+  (take-while pos? (repeatedly delete-current-orphan-attributes)))
 
 (defn update-template
   [user template-id {:keys [attributes] :as template}]
@@ -299,15 +329,9 @@
           (where {:id template-id}))
   nil)
 
-;; TODO: depending on how synonyms are going to be implemented, it may be necessary to check for existing synonyms
-;; before deleting the attributes as well.
-(defn- used-attribute-subselect
-  []
-  (subselect [:template_attrs :ta] (where {:ta.attribute_id :attributes.id})))
-
 (defn permanently-delete-template
   [template-id]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
   (delete :templates (where {:id template-id}))
-  (delete :attributes (where (not (exists (used-attribute-subselect)))))
+  (delete-orphan-attributes)
   nil)

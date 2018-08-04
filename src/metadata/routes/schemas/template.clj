@@ -82,8 +82,7 @@
    (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")
 
    (s/optional-key :attributes)
-   (describe [(s/recursive #'MetadataTemplateAttr)]
-             "Nested attributes (used for grouping related template attributes)")})
+   (describe [(s/recursive #'MetadataTemplateAttr)] "Nested attributes")})
 
 (s/defschema MetadataTemplate
   (assoc MetadataTemplateListEntry
@@ -123,8 +122,7 @@
    (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")
 
    (s/optional-key :attributes)
-   (describe [(s/recursive #'MetadataTemplateAttrUpdate)]
-             "Nested attributes (used for grouping related template attributes)")})
+   (describe [(s/recursive #'MetadataTemplateAttrUpdate)] "Nested attributes")})
 
 (s/defschema MetadataTemplateUpdate
   {:attributes

@@ -79,7 +79,10 @@
    (describe [TemplateAttrEnumValue] "The list of possible values for enumeration types")
 
    (s/optional-key :settings)
-   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")})
+   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")
+
+   (s/optional-key :attributes)
+   (describe [(s/recursive #'MetadataTemplateAttr)] "Nested attributes")})
 
 (s/defschema MetadataTemplate
   (assoc MetadataTemplateListEntry
@@ -116,7 +119,10 @@
    (describe [TemplateAttrEnumValueUpdate] "The list of possible values for enumeration types")
 
    (s/optional-key :settings)
-   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")})
+   (describe TemplateAttrSettings "Arbitrary settings saved by an admin and used by the UI (e.g. OLS query parameters)")
+
+   (s/optional-key :attributes)
+   (describe [(s/recursive #'MetadataTemplateAttrUpdate)] "Nested attributes")})
 
 (s/defschema MetadataTemplateUpdate
   {:attributes

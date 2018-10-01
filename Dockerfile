@@ -1,10 +1,10 @@
-FROM discoenv/clojure-base:master
+FROM clojure:lein-alpine
 
-ENV CONF_TEMPLATE=/usr/src/app/metadata.properties.tmpl
-ENV CONF_FILENAME=metadata.properties
-ENV PROGRAM=metadata
+WORKDIR /usr/src/app
 
-VOLUME ["/etc/iplant/de"]
+RUN apk add --no-cache git
+
+RUN ln -s "/usr/bin/java" "/bin/metadata"
 
 COPY project.clj /usr/src/app/
 RUN lein deps
@@ -15,9 +15,8 @@ COPY . /usr/src/app
 RUN lein uberjar && \
     cp target/metadata-standalone.jar .
 
-RUN ln -s "/usr/bin/java" "/bin/metadata"
-
-ENTRYPOINT ["run-service", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
+ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
+CMD ["--help"]
 
 ARG git_commit=unknown
 ARG version=unknown

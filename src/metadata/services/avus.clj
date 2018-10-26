@@ -2,8 +2,7 @@
   (:use [kameleon.uuids :only [uuid]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
-            [metadata.amqp :as amqp]
+  (:require [metadata.amqp :as amqp]
             [metadata.persistence.avu :as persistence]))
 
 (defn- filter-targets-by-attr-values
@@ -91,3 +90,16 @@
   (let [avus (get-avu-copies target-type target-id)]
     (copy-avus-to-dest-targets user avus dest-items)
     nil))
+
+(defn delete-target-avus
+  "Deletes the given AVUs from the given targets in a transaction."
+  [target-types target-ids avus]
+  (transaction
+    (doseq [target-id target-ids]
+      (doseq [{:keys [attr value unit]} avus]
+        (persistence/delete-target-avu target-types
+                                       target-id
+                                       attr
+                                       value
+                                       unit))))
+  nil)

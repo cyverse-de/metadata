@@ -124,6 +124,16 @@
         (add-orphaned-ids-where-clause avu-ids-to-keep)
         delete)))
 
+(defn delete-target-avu
+  "Deletes the AVU with the given attribute, value, and unit from the given target."
+  [target-types target-id attribute value unit]
+  (delete :avus
+          (where {:target_id   target-id
+                  :target_type [in (map db/->enum-val target-types)]
+                  :attribute   attribute
+                  :value       value
+                  :unit        unit})))
+
 (defn format-avu
   "Formats a Metadata AVU for JSON responses."
   [{:keys [id attribute] :as avu}]

@@ -16,6 +16,13 @@
            :description "Lists AVUs matching parameters in the query string."
            (ok (avus/list-avus params)))
 
+    (POST "/deleter" []
+          :query [{:keys [user]} StandardUserQueryParams]
+          :body [{:keys [target-types target-ids avus]} DeleteTargetAvusRequest]
+          :summary "Delete Target AVUs"
+          :description "Deletes AVUs matching those in the given `avus` list from the given `target-ids`."
+          (ok (avus/delete-target-avus target-types target-ids avus)))
+
     (POST "/filter-targets" []
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [target-types target-ids avus]} FilterByAvusRequest]

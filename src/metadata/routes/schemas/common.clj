@@ -27,15 +27,19 @@
 (s/defschema TargetIDList
   {:target-ids (describe [UUID] "A list of target IDs")})
 
+(s/defschema TargetTypesList
+  {:target-types (describe [TargetTypeEnum]
+                           (str "The types of the given IDs."
+                                " This list will usually only contain 1 type,"
+                                " but multiple are supported for cases such as `file` and `folder` types"
+                                " where it is known that the `target-ids` will be unique within those types"))})
+
 (s/defschema DataIdList
   {:filesystem (describe [UUID] "A list of UUIDs, each for a file or folder")})
 
 (s/defschema TargetFilterRequest
-  {:target-ids
-   (describe [UUID] "List of IDs to filter")
-
-   :target-types
-   (describe [TargetTypeEnum] "The types of the given IDs")})
+  (merge {:target-ids (describe [UUID] "List of IDs to filter")}
+         TargetTypesList))
 
 (s/defschema TargetItem
   {:id   TargetIdParam

@@ -49,3 +49,8 @@
 (s/defschema FilterByAvusRequest
   (merge TargetFilterRequest
          {:avus (describe [AvuFilterRequest] "The AVUs to use to filter the given targets")}))
+
+(s/defschema DeleteTargetAvusRequest
+  (merge TargetIDList
+         TargetTypesList
+         {:avus (describe [(select-keys Avu [:attr :value :unit])] "The AVUs to match for removal")}))

@@ -1,7 +1,7 @@
 (ns metadata.routes.comments
   (:use [common-swagger-api.schema]
+        [common-swagger-api.schema.metadata.comments]
         [metadata.routes.schemas.common]
-        [metadata.routes.schemas.comments]
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
             [metadata.services.comments :as comments]))

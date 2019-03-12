@@ -25,7 +25,7 @@
                  [org.cyverse/clojure-commons "2.8.1"]
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/common-swagger-api "2.9.3-SNAPSHOT"]
+                 [org.cyverse/common-swagger-api "2.9.3"]
                  [org.cyverse/kameleon "3.0.2"]
                  [org.cyverse/service-logging "2.8.0"]
                  [org.cyverse/event-messages "0.0.1"]
@@ -43,7 +43,7 @@
              ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
   :plugins [[test2junit "1.2.2"]
-            [jonase/eastwood "0.2.3"]]
+            [jonase/eastwood "0.3.5"]]
   :eastwood {:exclude-namespaces [metadata.routes.schemas.template
                                   metadata.routes.schemas.permanent-id-requests
                                   metadata.routes.templates

@@ -36,12 +36,8 @@
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main ^:skip-aot metadata.core
-  :ring {:handler metadata.core/dev-handler
-         :init    metadata.core/init-service
-         :port    60000}
   :uberjar-name "metadata-standalone.jar"
-  :profiles {:dev     {:plugins        [[lein-ring "0.12.5"]]
-                       :resource-paths ["conf/test"]}
+  :profiles {:dev     {:resource-paths ["conf/test"]}
              ;; compojure-api route macros should not be AOT compiled,
              ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}

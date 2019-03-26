@@ -9,12 +9,6 @@
             [metadata.events :as events]
             [service-logging.thread-context :as tc]))
 
-(defn dev-handler
-  [req]
-  (tc/with-logging-context config/svc-info
-    (require 'metadata.routes)
-    ((eval 'metadata.routes/app) req)))
-
 (defn init-amqp
   []
   (let [amqp-handlers {"events.metadata.ping" events/ping-handler}
@@ -25,12 +19,10 @@
     (.start (Thread. (fn [] (amqp/subscribe channel (:name queue-cfg) amqp-handlers))))))
 
 (defn init-service
-  ([]
-    (init-service config/default-config-file))
-  ([cfg-path]
-    (config/load-config-from-file cfg-path)
-    (init-amqp)
-    (db/define-database)))
+  [cfg-path]
+  (config/load-config-from-file cfg-path)
+  (init-amqp)
+  (db/define-database))
 
 (defn cli-options
   []

@@ -30,19 +30,21 @@
     :default config/default-config-file
     :validate [#(fs/exists? %) "The config file does not exist."
                #(fs/readable? %) "The config file is not readable."]]
+   ["-p" "--port PORT"
+    :parse-fn #(Integer/parseInt %)]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
 (defn run-jetty
-  []
+  [port]
   (require 'metadata.routes
            'ring.adapter.jetty)
   (log/warn "Started listening on" (config/listen-port))
-  ((eval 'ring.adapter.jetty/run-jetty) (eval 'metadata.routes/app) {:port (config/listen-port)}))
+  ((eval 'ring.adapter.jetty/run-jetty) (eval 'metadata.routes/app) {:port (or port (config/listen-port))}))
 
 (defn -main
   [& args]
   (tc/with-logging-context config/svc-info
     (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
       (init-service (:config options))
-      (run-jetty))))
+      (run-jetty (:port options)))))

@@ -40,7 +40,7 @@
 (cc/defprop-optstr db-subprotocol
   "The subprotocol to use when connecting to the database (e.g. postgresql)."
   [props config-valid configs]
-  "metadata.db.subprotocol" "pgsql")
+  "metadata.db.subprotocol" "postgresql")
 
 (cc/defprop-optstr db-host
   "The host name or IP address to use when

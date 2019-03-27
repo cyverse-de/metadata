@@ -13,32 +13,31 @@
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [net.sourceforge.owlapi/owlapi-api "3.5.0"]
                  [net.sourceforge.owlapi/owlapi-apibinding "3.4.10"]
                  [net.sourceforge.owlapi/owlapi-reasoner "3.3"]
-                 [metosin/compojure-api "1.1.8"]
                  [me.raynes/fs "1.4.6"]
-                 [cheshire "5.6.3"]
-                 [org.clojure/data.csv "0.1.3"]
-                 [com.novemberain/langohr "3.5.1"]
-                 [org.cyverse/clojure-commons "2.8.1"]
+                 [cheshire "5.8.1"]
+                 [org.clojure/data.csv "0.1.4"]
+
+                 ;; Langohr version 5.0.0 removes langohr.basic/blocking-subscribe.
+                 [com.novemberain/langohr "4.2.0"]
+
+                 [javax.servlet/servlet-api "2.5"]
+                 [org.cyverse/clojure-commons "3.0.3-SNAPSHOT"]
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/common-swagger-api "2.9.3"]
-                 [org.cyverse/kameleon "3.0.2"]
+                 [org.cyverse/common-swagger-api "2.10.3-SNAPSHOT"]
+                 [org.cyverse/kameleon "3.0.3"]
                  [org.cyverse/service-logging "2.8.0"]
                  [org.cyverse/event-messages "0.0.1"]
+                 [ring/ring-jetty-adapter "1.6.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main ^:skip-aot metadata.core
-  :ring {:handler metadata.core/dev-handler
-         :init    metadata.core/init-service
-         :port    60000}
   :uberjar-name "metadata-standalone.jar"
-  :profiles {:dev     {:dependencies   [[ring "1.5.0"]] ;; required for lein-ring with compojure-api 1.1.8+
-                       :plugins        [[lein-ring "0.9.7"]]
-                       :resource-paths ["conf/test"]}
+  :profiles {:dev     {:resource-paths ["conf/test"]}
              ;; compojure-api route macros should not be AOT compiled,
              ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}

@@ -25,10 +25,10 @@
                  [com.novemberain/langohr "4.2.0"]
 
                  [javax.servlet/servlet-api "2.5"]
-                 [org.cyverse/clojure-commons "3.0.3-SNAPSHOT"]
+                 [org.cyverse/clojure-commons "3.0.3"]
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/common-swagger-api "2.10.3-SNAPSHOT"]
+                 [org.cyverse/common-swagger-api "2.10.3"]
                  [org.cyverse/kameleon "3.0.3"]
                  [org.cyverse/service-logging "2.8.0"]
                  [org.cyverse/event-messages "0.0.1"]

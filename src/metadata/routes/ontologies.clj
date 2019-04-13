@@ -1,10 +1,10 @@
 (ns metadata.routes.ontologies
   (:use [common-swagger-api.schema]
-        [common-swagger-api.schema.ontologies]
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.ontologies]
         [ring.util.http-response :only [ok]])
-  (:require [metadata.services.ontology :as service]))
+  (:require [common-swagger-api.schema.ontologies :as schema]
+            [metadata.services.ontology :as service]))
 
 (defroutes ontologies
   (context "/ontologies" []
@@ -18,18 +18,18 @@
           (ok (service/get-ontology-details-listing)))
 
     (GET "/:ontology-version" []
-          :path-params [ontology-version :- OntologyVersionParam]
+          :path-params [ontology-version :- schema/OntologyVersionParam]
           :query [{:keys [user]} StandardUserQueryParams]
-          :return OntologyHierarchyList
+          :return schema/OntologyHierarchyList
           :summary "Get Ontology Hierarchies"
           :description "List Ontology Hierarchies saved for the given `ontology-version`."
           (ok (service/list-hierarchies ontology-version)))
 
     (POST "/:ontology-version/filter" []
-           :path-params [ontology-version :- OntologyVersionParam]
+           :path-params [ontology-version :- schema/OntologyVersionParam]
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [type id attrs]} TargetHierarchyFilterRequest]
-           :return OntologyHierarchyList
+           :return schema/OntologyHierarchyList
            :summary "Filter Target's Ontology Hierarchies"
            :description
            "Filters Ontology Hierarchies saved for the given `ontology-version`,
@@ -37,7 +37,7 @@
            (ok (service/filter-target-hierarchies ontology-version attrs type id)))
 
     (POST "/:ontology-version/filter-targets" []
-           :path-params [ontology-version :- OntologyVersionParam]
+           :path-params [ontology-version :- schema/OntologyVersionParam]
            :query [{:keys [user label]} OntologySearchParams]
            :body [{:keys [target-types target-ids attrs]} OntologySearchFilterRequest]
            :return TargetIDList
@@ -48,11 +48,11 @@
            (ok (service/filter-targets-by-ontology-class-search ontology-version attrs label target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter" []
-           :path-params [ontology-version :- OntologyVersionParam
-                         root-iri :- OntologyClassIRIParam]
+           :path-params [ontology-version :- schema/OntologyVersionParam
+                         root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
            :body [{:keys [target-types target-ids]} TargetFilterRequest]
-           :return OntologyHierarchy
+           :return schema/OntologyHierarchy
            :summary "Filter an Ontology Hierarchy"
            :description
            "Filters an Ontology Hierarchy, rooted at the given `root-iri`, returning only the
@@ -60,8 +60,8 @@
            (ok (service/filter-hierarchy ontology-version root-iri attr target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter-targets" []
-           :path-params [ontology-version :- OntologyVersionParam
-                         root-iri :- OntologyClassIRIParam]
+           :path-params [ontology-version :- schema/OntologyVersionParam
+                         root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
            :body [{:keys [target-types target-ids]} TargetFilterRequest]
            :return TargetIDList
@@ -72,8 +72,8 @@
            (ok (service/filter-hierarchy-targets ontology-version root-iri attr target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter-unclassified" []
-           :path-params [ontology-version :- OntologyVersionParam
-                         root-iri :- OntologyClassIRIParam]
+           :path-params [ontology-version :- schema/OntologyVersionParam
+                         root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
            :body [{:keys [target-types target-ids]} TargetFilterRequest]
            :return TargetIDList
@@ -91,23 +91,23 @@
            :query [{:keys [user]} StandardUserQueryParams]
            :multipart-params [ontology-xml :- String]
            :middleware [service/wrap-multipart-xml-parser]
-           :return OntologyDetails
+           :return schema/OntologyDetails
            :summary "Save an Ontology"
            :description "Saves an Ontology XML document in the database."
            (ok (service/save-ontology-xml user ontology-xml)))
 
     (DELETE "/:ontology-version" []
-             :path-params [ontology-version :- OntologyVersionParam]
+             :path-params [ontology-version :- schema/OntologyVersionParam]
              :query [{:keys [user]} StandardUserQueryParams]
              :summary "Delete an Ontology"
              :description "Marks an Ontology as deleted in the database."
              (ok (service/delete-ontology user ontology-version)))
 
     (DELETE "/:ontology-version/:root-iri" []
-             :path-params [ontology-version :- OntologyVersionParam
-                           root-iri :- OntologyClassIRIParam]
+             :path-params [ontology-version :- schema/OntologyVersionParam
+                           root-iri :- schema/OntologyClassIRIParam]
              :query [{:keys [user]} StandardUserQueryParams]
-             :return OntologyHierarchyList
+             :return schema/OntologyHierarchyList
              :summary "Delete an Ontology Hierarchy"
              :description
              "Removes the Ontology Class for the given `root-iri` and `ontology-version`, and all
@@ -118,10 +118,10 @@
              (ok (service/delete-hierarchy user ontology-version root-iri)))
 
     (PUT "/:ontology-version/:root-iri" []
-          :path-params [ontology-version :- OntologyVersionParam
-                        root-iri :- OntologyClassIRIParam]
+          :path-params [ontology-version :- schema/OntologyVersionParam
+                        root-iri :- schema/OntologyClassIRIParam]
           :query [{:keys [user]} StandardUserQueryParams]
-          :return OntologyHierarchy
+          :return schema/OntologyHierarchy
           :summary "Save an Ontology Hierarchy"
           :description
           "Save an Ontology Hierarchy, parsed from the Ontology XML stored with the given

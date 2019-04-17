@@ -4,6 +4,7 @@
         [metadata.routes.schemas.common]
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
+            [common-swagger-api.schema.metadata :as schema]
             [metadata.services.comments :as comments]))
 
 (defroutes admin-comment-routes
@@ -43,14 +44,14 @@
     :tags ["data-comments"]
 
     (GET "/:data-id/comments" []
-      :path-params [data-id :- TargetIdPathParam]
+      :path-params [data-id :- schema/TargetIdParam]
       :return CommentList
       :summary "Listing Data Comments"
       :description "This endpoint retrieves all of the comments made on a file or folder."
       (ok (comments/list-data-comments data-id)))
 
     (POST "/:data-id/comments" []
-      :path-params [data-id :- TargetIdPathParam]
+      :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user data-type]} StandardDataItemQueryParams]
       :body [body (describe CommentRequest "The comment to add.")]
       :return CommentResponse
@@ -59,7 +60,7 @@
       (ok (comments/add-data-comment user data-id data-type body)))
 
     (PATCH "/:data-id/comments/:comment-id" []
-      :path-params [data-id :- TargetIdPathParam
+      :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
       :summary "Retract/Readmit a Comment"
@@ -74,7 +75,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["admin-data-comments"]
 
     (DELETE "/:data-id/comments/:comment-id" []
-      :path-params [data-id :- TargetIdPathParam
+      :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :summary "Delete a Comment"
@@ -83,7 +84,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/delete-data-comment data-id comment-id)))
 
     (PATCH "/:data-id/comments/:comment-id" []
-      :path-params [data-id :- TargetIdPathParam
+      :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
       :summary "Retract/Readmit a Comment"
@@ -98,14 +99,14 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["app-comments"]
 
     (GET "/:app-id/comments" []
-      :path-params [app-id :- TargetIdPathParam]
+      :path-params [app-id :- schema/TargetIdParam]
       :return CommentList
       :summary "Listing App Comments"
       :description "This endpoint retrieves all of the comments made on an app."
       (ok (comments/list-app-comments app-id)))
 
     (POST "/:app-id/comments" []
-      :path-params [app-id :- TargetIdPathParam]
+      :path-params [app-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe CommentRequest "The comment to add.")]
       :return CommentResponse
@@ -114,7 +115,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/add-app-comment user app-id body)))
 
     (PATCH "/:app-id/comments/:comment-id" []
-      :path-params [app-id :- TargetIdPathParam
+      :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
       :summary "Retract/Readmit a Comment"
@@ -129,7 +130,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["admin-app-comments"]
 
     (DELETE "/:app-id/comments/:comment-id" []
-      :path-params [app-id :- TargetIdPathParam
+      :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :summary "Delete an App Comment"
@@ -137,7 +138,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/delete-app-comment app-id comment-id)))
 
     (PATCH "/:app-id/comments/:comment-id" []
-      :path-params [app-id :- TargetIdPathParam
+      :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
       :summary "Retract/Readmit a Comment"

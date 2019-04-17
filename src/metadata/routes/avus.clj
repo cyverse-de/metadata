@@ -1,9 +1,14 @@
 (ns metadata.routes.avus
   (:use [common-swagger-api.schema]
-        [metadata.routes.schemas.common]
+        [metadata.routes.schemas.common
+         :only [AvuSearchQueryParams
+                TargetIDList
+                TargetTypeEnum
+                TargetItemList]]
         [metadata.routes.schemas.avus]
         [ring.util.http-response :only [ok]])
-  (:require [metadata.services.avus :as avus]))
+  (:require [common-swagger-api.schema.metadata :as schema]
+            [metadata.services.avus :as avus]))
 
 (defroutes avus
   (context "/avus" []
@@ -11,7 +16,7 @@
 
     (GET "/" []
            :query [params AvuSearchQueryParams]
-           :return AvuList
+           :return schema/AvuList
            :summary "List AVUs."
            :description "Lists AVUs matching parameters in the query string."
            (ok (avus/list-avus params)))
@@ -34,20 +39,20 @@
            (ok (avus/filter-targets-by-avus target-types target-ids avus)))
 
     (GET "/:target-type/:target-id" []
-          :path-params [target-id :- TargetIdPathParam
+          :path-params [target-id :- schema/TargetIdParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
-          :return AvuList
+          :return schema/AvuList
           :summary "View all Metadata AVUs on a Target"
           :description "Lists all AVUs associated with the target item."
           (ok (avus/list-avus target-type target-id)))
 
     (POST "/:target-type/:target-id" []
-           :path-params [target-id :- TargetIdPathParam
+           :path-params [target-id :- schema/TargetIdParam
                          target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]
-           :body [body (describe AvuListRequest "The Metadata AVU update request")]
-           :return AvuList
+           :body [body schema/AvuListRequest]
+           :return schema/AvuList
            :summary "Add/Update Metadata AVUs"
            :description "
 Adds or updates Metadata AVUs on the given target item.
@@ -59,11 +64,11 @@ matching `attr`, `value`, `unit`, `target`, and `type`."
            (ok (avus/update-avus user target-type target-id body)))
 
     (PUT "/:target-type/:target-id" []
-          :path-params [target-id :- TargetIdPathParam
+          :path-params [target-id :- schema/TargetIdParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
-          :body [body (describe SetAvuRequest "The Metadata AVU save request")]
-          :return AvuList
+          :body [body schema/SetAvuRequest]
+          :return schema/AvuList
           :summary "Set Metadata AVUs on a Target"
           :description "
 Sets Metadata AVUs on the given target item.
@@ -78,7 +83,7 @@ then all remaining AVUs in the request will be added to the target item."
           (ok (avus/set-avus user target-type target-id body)))
 
     (POST "/:target-type/:target-id/copy" []
-           :path-params [target-id :- TargetIdPathParam
+           :path-params [target-id :- schema/TargetIdParam
                     target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]
            :body [body (describe TargetItemList "The destination targets.")]

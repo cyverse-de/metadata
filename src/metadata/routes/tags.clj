@@ -4,6 +4,7 @@
         [metadata.routes.schemas.tags]
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
+            [common-swagger-api.schema.metadata :as schema]
             [metadata.services.tags :as tags]))
 
 (defroutes filesystem-tags
@@ -39,7 +40,7 @@
       (ok))
 
     (GET "/:data-id/tags" []
-      :path-params [data-id :- TargetIdPathParam]
+      :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :responses {200      {:schema      TagList
                             :description "The tags are listed in the response"}
@@ -53,7 +54,7 @@
       (ok (tags/list-attached-tags user data-id)))
 
     (PATCH "/:data-id/tags" []
-      :path-params [data-id :- TargetIdPathParam]
+      :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
       :responses {200      {:schema      AttachedTagsListing

@@ -3,7 +3,8 @@
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.favorites]
         [ring.util.http-response :only [ok]])
-  (:require [metadata.services.favorites :as fave]))
+  (:require [common-swagger-api.schema.metadata :as schema]
+            [metadata.services.favorites :as fave]))
 
 (defroutes favorites
   (context "/favorites" []
@@ -24,14 +25,14 @@
       (ok (fave/list-favorite-data-ids user entity-type)))
 
     (DELETE "/filesystem/:data-id" []
-      :path-params [data-id :- TargetIdPathParam]
+      :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :summary "Unmark a Data Resource as Favorite"
       :description "This endpoint removes a file or folder from the authenticated user's favorites."
       (ok (fave/remove-favorite user data-id)))
 
    (PUT "/filesystem/:data-id" []
-     :path-params [data-id :- TargetIdPathParam]
+     :path-params [data-id :- schema/TargetIdParam]
      :query [{:keys [user data-type]} StandardDataItemQueryParams]
      :summary "Mark a Data Resource as Favorite"
      :description "This endpoint marks a given file or folder a favorite of the authenticated user."

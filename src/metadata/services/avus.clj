@@ -77,12 +77,21 @@
     (doseq [{:keys [id type]} dest-targets]
       (update-avus user type id {:avus avus}))))
 
+(defn- get-avu-copy
+  "Returns only the attr, value, unit, and avus of the given avu.
+   The nested avus are also copied recursively with this function."
+  [{:keys [avus] :as avu}]
+  (when avu
+    (-> avu
+        (select-keys [:attr :value :unit])
+        (assoc :avus (map get-avu-copy avus)))))
+
 (defn- get-avu-copies
   "Fetches the list of Metadata AVUs for the given target,
    returning only the attr, value, and unit of each avu."
   [target-type target-id]
   (let [avus (persistence/avu-list target-type target-id)]
-    (map #(select-keys % [:attr :value :unit]) avus)))
+    (map get-avu-copy avus)))
 
 (defn copy-avus
   "Copies Metadata AVUs from the target item to dest-items."

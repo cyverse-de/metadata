@@ -47,7 +47,7 @@
 (defn- format-attr-settings
   [{:keys [settings] :as attr}]
   (if settings
-    (assoc attr :settings (json/decode settings))
+    (assoc attr :settings (json/decode (str settings)))
     attr))
 
 (defn- attr-fields

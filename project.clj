@@ -30,9 +30,9 @@
                  [org.cyverse/common-cli "2.8.1"]
                  [org.cyverse/common-swagger-api "2.10.7-SNAPSHOT"]
                  [org.cyverse/kameleon "3.0.3"]
-                 [org.cyverse/service-logging "2.8.0"]
+                 [org.cyverse/service-logging "2.8.2"]
                  [org.cyverse/event-messages "0.0.1"]
-                 [ring/ring-jetty-adapter "1.6.0"]
+                 [http-kit "2.3.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main ^:skip-aot metadata.core

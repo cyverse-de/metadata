@@ -35,16 +35,16 @@
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
-(defn run-jetty
+(defn run-server
   [port]
   (require 'metadata.routes
-           'ring.adapter.jetty)
+           'org.httpkit.server)
   (log/warn "Started listening on" (config/listen-port))
-  ((eval 'ring.adapter.jetty/run-jetty) (eval 'metadata.routes/app) {:port (or port (config/listen-port))}))
+  ((eval 'org.httpkit.server/run-server) (eval 'metadata.routes/app) {:port (or port (config/listen-port))}))
 
 (defn -main
   [& args]
   (tc/with-logging-context config/svc-info
     (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
       (init-service (:config options))
-      (run-jetty (:port options)))))
+      (run-server (:port options)))))

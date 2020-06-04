@@ -5,6 +5,7 @@
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
             [common-swagger-api.schema.metadata :as schema]
+            [common-swagger-api.schema.metadata.tags :as ts]
             [metadata.services.tags :as tags]))
 
 (defroutes filesystem-tags
@@ -13,15 +14,14 @@
 
     (GET "/tags" []
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      AttachedTagsListing
-                            :description "Attached tags are listied in the response"}
+      :responses {200      {:schema      ts/AttachedTagsListing
+                            :description "Attached tags are listed in the response"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "List All Attached Tags for a User"
-      :description
-      "This endpoint lists all tags that have been attached to a file or folder by a user."
+      :summary ts/GetTagsSummary
+      :description ts/GetTagsDescription
       (ok (tags/list-all-attached-tags user)))
 
     (DELETE "/tags" []
@@ -33,31 +33,29 @@
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Permanently Delete All Attached Tags for a User"
-      :description
-      "This endpoint permanently deletes all tag attachments that have been added to a file or folder by a user."
+      :summary ts/DeleteTagsSummary
+      :description ts/DeleteTagsDescription
       (tags/delete-all-attached-tags user)
       (ok))
 
     (GET "/:data-id/tags" []
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      TagList
+      :responses {200      {:schema      ts/TagList
                             :description "The tags are listed in the response"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "List Attached Tags"
-      :description
-      "This endpoint lists the tags of the user that are attached to the indicated file or folder."
+      :summary ts/GetAttachedTagSummary
+      :description ts/GetAttachedTagDescription
       (ok (tags/list-attached-tags user data-id)))
 
     (PATCH "/:data-id/tags" []
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
-      :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
-      :responses {200      {:schema      AttachedTagsListing
+      :body [body ts/TagIdList]
+      :responses {200      {:schema     ts/AttachedTagsListing
                             :description "The tags were attached or detached from the file or folder"}
                   400      {:schema      ErrorResponseBadTagRequest
                             :description "The `type` wasn't provided or had a value other than `attach` or `detach`;
@@ -68,10 +66,8 @@
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Attach/Detach Tags to a File/Folder"
-      :description "
-Depending on the `type` parameter, this endpoint either attaches a set of the authenticated user's
-tags to the indicated file or folder, or it detaches the set."
+      :summary ts/PatchTagsSummary
+      :description ts/PatchTagsDescription
       (ok (tags/handle-patch-file-tags user data-id data-type type body)))))
 
 (defroutes tags
@@ -79,8 +75,8 @@ tags to the indicated file or folder, or it detaches the set."
     :tags ["tags"]
 
     (GET "/suggestions" []
-      :query [{:keys [user contains limit]} TagSuggestQueryParams]
-      :responses {200      {:schema      TagList
+      :query [{:keys [user contains limit]} ts/TagSuggestQueryParams]
+      :responses {200      {:schema      ts/TagList
                             :description "zero or more suggestions were returned"}
                   400      {:schema      ErrorResponseIllegalArgument
                             :description "the `contains` parameter was missing or
@@ -89,23 +85,20 @@ tags to the indicated file or folder, or it detaches the set."
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Suggest a Tag"
-      :description "
-Given a textual fragment of a tag's value, this endpoint will list up to a given number of the
-authenticated user's tags that contain the fragment."
+      :summary ts/GetTagSuggestionsSummary
+      :description ts/GetTagSuggestionsDescription
       (ok (tags/suggest-tags user contains limit)))
 
     (GET "/user" []
       :query [{:keys [user]} StandardUserQueryParams]
-      :responses {200      {:schema      TagList
+      :responses {200      {:schema      ts/TagList
                             :description "The tags are listed in the response"}
                   500      {:schema      ErrorResponseUnchecked
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "List Tags Defined by a User"
-      :description
-      "This endpoint lists all of the tags defined by a user."
+      :summary ts/GetUserTagsSummary
+      :description ts/GetUserTagsDescription
       (ok (tags/list-tags-defined-by user)))
 
     (DELETE "/user" []
@@ -117,16 +110,15 @@ authenticated user's tags that contain the fragment."
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Delete Tags Defined by a User"
-      :description
-      "This endpoint deletes all tags defined by the current user. Corresponding attached tags will also be deleted."
+      :summary ts/DeleteUserTagsSummary
+      :description ts/DeleteUserTagsDescription
       (tags/delete-tags-defined-by user)
       (ok))
 
     (POST "/user" []
       :query [{:keys [user]} StandardUserQueryParams]
-      :body [body (describe TagRequest "The user tag to create.")]
-      :responses {200      {:schema      TagDetails
+      :body [body ts/TagRequest]
+      :responses {200      {:schema      ts/TagDetails
                             :description "The tag was successfully created"}
                   400      {:schema      ErrorResponseBadTagRequest
                             :description "The `value` was not unique, too long,
@@ -135,12 +127,12 @@ authenticated user's tags that contain the fragment."
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Create a Tag"
-      :description "This endpoint creates a tag for use by the authenticated user."
+      :summary ts/PostTagSummary
+      :description ts/PostTagDescription
       (ok (tags/create-user-tag user body)))
 
     (DELETE "/user/:tag-id" []
-      :path-params [tag-id :- TagIdPathParam]
+      :path-params [tag-id :- ts/TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :coercion middleware/no-response-coercion
       :responses {200      {:schema      nil
@@ -151,15 +143,15 @@ authenticated user's tags that contain the fragment."
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Delete a Tag"
-      :description "This endpoint allows a user tag to be deleted, detaching it from all metadata."
+      :summary ts/DeleteTagSummary
+      :description ts/DeleteTagDescription
       (ok (tags/delete-user-tag user tag-id)))
 
     (PATCH "/user/:tag-id" []
-      :path-params [tag-id :- TagIdPathParam]
+      :path-params [tag-id :- ts/TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
-      :body [body (describe TagUpdateRequest "The tag fields to update.")]
-      :responses {200      {:schema      TagDetails
+      :body [body ts/TagUpdateRequest]
+      :responses {200      {:schema      ts/TagDetails
                             :description "The tag was successfully created"}
                   400      {:schema      ErrorResponseBadTagRequest
                             :description "The `value` was not unique, too long,
@@ -168,7 +160,6 @@ authenticated user's tags that contain the fragment."
                             :description "Unchecked errors"}
                   :default {:schema      ErrorResponse
                             :description "All other errors"}}
-      :summary "Update Tag Labels/Descriptions"
-      :description
-      "This endpoint allows a tag's label and description to be modified by the owning user."
+      :summary ts/PatchTagSummary
+      :description ts/PatchTagDescription
       (ok (tags/update-user-tag user tag-id body)))))

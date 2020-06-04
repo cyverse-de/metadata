@@ -28,7 +28,7 @@
                  [org.cyverse/clojure-commons "3.0.3"]
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/common-swagger-api "2.10.7-SNAPSHOT"]
+                 [org.cyverse/common-swagger-api "3.0.2-SNAPSHOT"]
                  [org.cyverse/kameleon "3.0.3"]
                  [org.cyverse/service-logging "2.8.0"]
                  [org.cyverse/event-messages "0.0.1"]

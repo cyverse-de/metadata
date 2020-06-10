@@ -31,4 +31,8 @@
           400 PostTag400Response}
          TagDefaultErrorResponses))
 
-(def PatchTagResponses PostTagResponses)
+(def PatchTagResponses
+  (merge {200 {:schema      TagDetails
+               :description "The tag was successfully updated"}
+          400 PostTag400Response}
+         TagDefaultErrorResponses))

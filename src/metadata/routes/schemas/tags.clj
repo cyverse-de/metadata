@@ -3,71 +3,36 @@
         [common-swagger-api.schema :only [->optional-param
                                           describe
                                           ErrorResponse
+                                          ErrorResponseNotFound
                                           NonBlankString
                                           StandardUserQueryParams]]
+        [common-swagger-api.schema.metadata.tags]
         [metadata.routes.schemas.common])
-  (:require [schema.core :as s])
-  (:import [java.util UUID]))
+  (:require [schema.core :as s]))
 
-(def TagIdPathParam (describe UUID "The tag's UUID"))
-(def TagValueString (s/both NonBlankString (s/pred #(<= (count %) 255) 'valid-tag-value-size?)))
-(def TagSuggestLimit (s/both Long (s/pred (partial < 0) 'valid-tag-suggest-limit?)))
+(s/defschema TagSuggestUserQueryParams
+  (merge StandardUserQueryParams
+         TagSuggestQueryParams))
 
 (s/defschema UpdateAttachedTagsQueryParams
   (merge StandardDataItemQueryParams
-    {:type
-     (describe (s/enum "attach" "detach")
-       "Whether to attach or detach the provided set of tags to the file/folder")}))
+    TagTypeEnum))
 
-(s/defschema TagSuggestQueryParams
-  (merge StandardUserQueryParams
-    {:contains
-     (describe String "The value fragment")
+(def PatchTagsResponses
+  (merge {200 {:schema      AttachedTagsListing
+               :description "The tags were attached or detached from the file or folder"}
+          400 PatchTags400Response
+          404 PatchTags404Response}
+         TagDefaultErrorResponses))
 
-     (s/optional-key :limit)
-     (describe TagSuggestLimit
-       "The maximum number of suggestions to return. No limit means return all")}))
+(def PostTagResponses
+  (merge {200 {:schema      TagDetails
+               :description "The tag was successfully created"}
+          400 PostTag400Response}
+         TagDefaultErrorResponses))
 
-(s/defschema Tag
-  {:id
-   (describe UUID "The service-provided UUID associated with the tag")
-
-   :value
-   (describe TagValueString "The value used to identify the tag, at most 255 characters in length")
-
-   (s/optional-key :description)
-   (describe String "The description of the purpose of the tag")})
-
-(s/defschema TagRequest
-  (dissoc Tag :id))
-
-(s/defschema TagUpdateRequest
-  (->optional-param TagRequest :value))
-
-(s/defschema TagList
-  {:tags (describe [Tag] "A list of Tags")})
-
-(s/defschema TagIdList
-  {:tags (describe [UUID] "A list of Tag UUIDs")})
-
-(s/defschema AttachedTagTarget
-  {:id   (describe UUID "The target's UUID")
-   :type (describe DataTypeEnum "The target's data type")})
-
-(s/defschema TagDetails
-  (merge Tag
-    {:owner_id    (describe String "The owner of the tag")
-     :public      (describe Boolean "Whether the tag is publicly accessible")
-     :created_on  (describe Long "The date the tag was created in ms since the POSIX epoch")
-     :modified_on (describe Long "The date the tag was last modified in ms since the POSIX epoch")}))
-
-(s/defschema AttachedTagDetails
-  (merge TagDetails
-    {:targets (describe [AttachedTagTarget] "A list of targets attached to the tag")}))
-
-(s/defschema AttachedTagsListing
-  {:tags (describe [AttachedTagDetails] "A list of tags and their attached targets")})
-
-(s/defschema ErrorResponseBadTagRequest
-  (assoc ErrorResponse
-    :error_code (describe (s/enum ERR_ILLEGAL_ARGUMENT ERR_NOT_UNIQUE) "Bad Tag Request error codes")))
+(def PatchTagResponses
+  (merge {200 {:schema      TagDetails
+               :description "The tag was successfully updated"}
+          400 PostTag400Response}
+         TagDefaultErrorResponses))

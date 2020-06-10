@@ -1,15 +1,14 @@
 (ns metadata.routes.schemas.common
-  (:use [common-swagger-api.schema :only [describe StandardUserQueryParams]])
+  (:use [common-swagger-api.schema :only [describe StandardUserQueryParams]]
+        [common-swagger-api.schema.metadata])
   (:require [common-swagger-api.schema.metadata :as schema]
             [schema.core :as s])
   (:import [java.util UUID]))
 
-(def DataTypes ["file" "folder"])
 (def TargetTypes (concat DataTypes ["analysis" "app" "user"]))
 
 (def TargetTypeEnum (apply s/enum TargetTypes))
 
-(def DataTypeEnum (apply s/enum DataTypes))
 (def DataTypeParam (describe DataTypeEnum "The type of the requested data item."))
 
 (s/defschema StandardDataItemQueryParams

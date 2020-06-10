@@ -3,17 +3,32 @@
         [common-swagger-api.schema :only [->optional-param
                                           describe
                                           ErrorResponse
+                                          ErrorResponseNotFound
                                           NonBlankString
                                           StandardUserQueryParams]]
+        [common-swagger-api.schema.metadata.tags]
         [metadata.routes.schemas.common])
   (:require [schema.core :as s]))
 
+(s/defschema TagSuggestUserQueryParams
+  (merge StandardUserQueryParams
+         TagSuggestQueryParams))
+
 (s/defschema UpdateAttachedTagsQueryParams
   (merge StandardDataItemQueryParams
-    {:type
-     (describe (s/enum "attach" "detach")
-       "Whether to attach or detach the provided set of tags to the file/folder")}))
+    TagTypeEnum))
 
-(s/defschema ErrorResponseBadTagRequest
-  (assoc ErrorResponse
-    :error_code (describe (s/enum ERR_ILLEGAL_ARGUMENT ERR_NOT_UNIQUE) "Bad Tag Request error codes")))
+(def PatchTagsResponses
+  (merge {200 {:schema      AttachedTagsListing
+               :description "The tags were attached or detached from the file or folder"}
+          400 PatchTags400Response
+          404 PatchTags404Response}
+         TagDefaultErrorResponses))
+
+(def PostTagResponses
+  (merge {200 {:schema      TagDetails
+               :description "The tag was successfully created"}
+          400 PostTag400Response}
+         TagDefaultErrorResponses))
+
+(def PatchTagResponses PostTagResponses)

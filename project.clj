@@ -13,26 +13,26 @@
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [[org.clojure/clojure "1.10.2"]
                  [net.sourceforge.owlapi/owlapi-api "3.5.0"]
                  [net.sourceforge.owlapi/owlapi-apibinding "3.4.10"]
                  [net.sourceforge.owlapi/owlapi-reasoner "3.3"]
                  [me.raynes/fs "1.4.6"]
-                 [cheshire "5.8.1"]
-                 [org.clojure/data.csv "0.1.4"]
+                 [cheshire "5.10.0"]
+                 [org.clojure/data.csv "1.0.0"]
 
                  ;; Langohr version 5.0.0 removes langohr.basic/blocking-subscribe.
                  [com.novemberain/langohr "4.2.0"]
 
                  [javax.servlet/servlet-api "2.5"]
-                 [org.cyverse/clojure-commons "3.0.3"]
+                 [org.cyverse/clojure-commons "3.0.6"]
                  [org.cyverse/common-cfg "2.8.1"]
                  [org.cyverse/common-cli "2.8.1"]
-                 [org.cyverse/common-swagger-api "3.0.2"]
-                 [org.cyverse/kameleon "3.0.3"]
-                 [org.cyverse/service-logging "2.8.0"]
+                 [org.cyverse/common-swagger-api "3.0.7"]
+                 [org.cyverse/kameleon "3.0.4"]
+                 [org.cyverse/service-logging "2.8.2"]
                  [org.cyverse/event-messages "0.0.1"]
-                 [ring/ring-jetty-adapter "1.6.0"]
+                 [ring/ring-jetty-adapter "1.9.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
   :main ^:skip-aot metadata.core
@@ -41,8 +41,9 @@
              ;; compojure-api route macros should not be AOT compiled,
              ;; so that schema enum values can be loaded from the db
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
-  :plugins [[test2junit "1.2.2"]
-            [jonase/eastwood "0.3.5"]]
+  :plugins [[jonase/eastwood "0.3.5"]
+            [lein-ancient "0.7.0"]
+            [test2junit "1.2.2"]]
   :eastwood {:exclude-namespaces [metadata.routes.schemas.template
                                   metadata.routes.schemas.permanent-id-requests
                                   metadata.routes.templates

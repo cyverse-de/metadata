@@ -47,7 +47,8 @@
      :updated_by (describe String "The username of the user that last updated the Permanent ID Request status")}))
 
 (s/defschema PermanentIDRequestList
-  {:requests (describe [PermanentIDRequestListing] "A list of Permanent ID Requests")})
+  {:requests (describe [PermanentIDRequestListing] "A list of Permanent ID Requests")
+   :total    (describe Long "The total number of permanent id requests in the listing.")})
 
 (def ValidPermanentIDRequestListSortFields
   (s/enum

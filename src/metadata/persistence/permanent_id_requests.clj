@@ -39,8 +39,6 @@
 (defn- list-permanent-id-requests-query
   "Lists the Permanent ID Requests that have been submitted by the user."
   [{user       :user
-    row-offset :offset
-    row-limit  :limit
     sort-field :sort-field
     sort-dir   :sort-dir}]
   (subselect [(list-permanent-id-requests-subselect user) :reqs]
@@ -50,9 +48,7 @@
               [(sqlfn :last :status_date) :date_updated]
               [(sqlfn :last :updated_by) :updated_by])
       (group :id :type :target_id :target_type :requested_by :original_path)
-      (order (or sort-field :date_submitted) (or sort-dir :ASC))
-      (limit row-limit)
-      (offset row-offset)))
+      (order (or sort-field :date_submitted) (or sort-dir :ASC))))
 
 (defn- format-request-listing
   [request]
@@ -63,11 +59,16 @@
 
 (defn list-permanent-id-requests
   "Lists Permanent ID Requests, filtered and sorted by the given params."
-  [{:keys [statuses] :as params}]
+  [{:keys [statuses] row-limit :limit row-offset :offset :as params}]
   (let [status-clause (when statuses ['in statuses])]
     (map format-request-listing
       (select [(list-permanent-id-requests-query params) :request_list]
-        (where-if-defined {:status status-clause})))))
+        (fields :id :type :target_id :target_type :requested_by :original_path :date_submitted
+                :status :date_updated :updated_by
+                [(raw "count(*) OVER ()") :total])
+        (where-if-defined {:status status-clause})
+        (limit row-limit)
+        (offset row-offset)))))
 
 (defn get-permanent-id-request
   "Gets Permanent ID Request details. If the given user is not nil, only fetches details if the request

@@ -56,9 +56,14 @@
   [params]
   (dissoc (format-listing-params params) :user))
 
+(defn- format-listing
+  [[{:keys [total]} :as listing]]
+  {:requests (mapv #(dissoc % :total) listing)
+   :total    (or total 0)})
+
 (defn list-permanent-id-requests
   [params]
-  {:requests (db/list-permanent-id-requests (format-listing-params params))})
+  (format-listing (db/list-permanent-id-requests (format-listing-params params))))
 
 (defn- add-request-history
   [{request-id :id :as request}]
@@ -86,7 +91,7 @@
 
 (defn admin-list-permanent-id-requests
   [params]
-  {:requests (db/list-permanent-id-requests (format-admin-listing-params params))})
+  (format-listing (db/list-permanent-id-requests (format-admin-listing-params params))))
 
 (defn admin-get-permanent-id-request
   [user request-id]

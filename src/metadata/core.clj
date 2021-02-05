@@ -19,8 +19,8 @@
     (.start (Thread. (fn [] (amqp/subscribe channel (:name queue-cfg) amqp-handlers))))))
 
 (defn init-service
-  [cfg-path]
-  (config/load-config-from-file cfg-path)
+  [& [cfg-path]]
+  (config/load-config-from-file (or cfg-path config/default-config-file))
   (init-amqp)
   (db/define-database))
 

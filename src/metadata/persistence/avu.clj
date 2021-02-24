@@ -73,10 +73,10 @@
   "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
   [user-id avu]
   (sql/update :avus
-    (set-fields (-> (select-keys avu [:attribute :value :unit])
-                    (assoc :modified_by user-id
-                           :modified_on (sqlfn now))))
-    (where (select-keys avu [:id]))))
+              (set-fields (-> (select-keys avu [:attribute :value :unit])
+                              (assoc :modified_by user-id
+                                     :modified_on (sqlfn now))))
+              (where (select-keys avu [:id]))))
 
 (defn- update-valid-avu
   "Updates an AVU, validating its given target_type and target_id match what's already in the database.
@@ -152,7 +152,7 @@
   (let [add-criterion (fn [query f vs] (if (seq vs) (where query {f [in vs]}) query))]
     (-> (select* :avus)
         (add-criterion :attribute attributes)
-        (add-criterion :target_type target-types)
+        (add-criterion :target_type (map db/->enum-val target-types))
         (add-criterion :value values)
         (add-criterion :unit units)
         (select))))

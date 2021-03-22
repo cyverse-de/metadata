@@ -2,6 +2,7 @@
   (:use [common-swagger-api.schema]
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.template]
+        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [metadata.services.templates :as templates]))
 
@@ -22,6 +23,7 @@
     :tags ["template-info"]
 
     (GET "/" []
+      :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates"
@@ -29,6 +31,7 @@
       (ok (templates/list-templates)))
 
     (GET "/attr/:attr-id" []
+      :middleware [otel-middleware]
       :path-params [attr-id :- AttrIdPathParam]
       :query [params StandardUserQueryParams]
       :return MetadataTemplateAttr
@@ -40,6 +43,7 @@
       :path-params [template-id :- TemplateIdPathParam]
 
       (GET "/" []
+        :middleware [otel-middleware]
         :query [params StandardUserQueryParams]
         :return MetadataTemplate
         :summary "View a Metadata Template"
@@ -47,6 +51,7 @@
         (ok (templates/view-template template-id)))
 
       (GET "/blank-csv" []
+        :middleware [otel-middleware]
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a blank CSV template file for a metadata template."
         :description "This endpoint returns a CSV file suitable for a specific template,
@@ -56,6 +61,7 @@
         (csv-download-resp attachment "metadata.csv" (templates/view-template-csv template-id)))
 
       (GET "/guide-csv" []
+        :middleware [otel-middleware]
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a CSV guide file for a metadata template."
         :description "This endpoint returns a CSV file guide for a specific template.
@@ -64,6 +70,7 @@
         (csv-download-resp attachment "guide.csv" (templates/view-template-guide template-id)))
 
       (GET "/zip-csv" []
+        :middleware [otel-middleware]
         :query [{:keys [attachment]} CSVDownloadQueryParams]
         :summary "Get a ZIP file containing both the guide and blank CSV for a template."
         :description "This endpoint returns a zip file containing both the
@@ -75,6 +82,7 @@
     :tags ["template-administration"]
 
     (GET "/" []
+      :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates for Administrators"
@@ -82,6 +90,7 @@
       (ok (templates/admin-list-templates)))
 
     (POST "/" []
+      :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
       :body [body (describe MetadataTemplateUpdate "The template to add.")]
       :return MetadataTemplate
@@ -90,6 +99,7 @@
       (ok (templates/add-template params body)))
 
     (PUT "/:template-id" []
+      :middleware [otel-middleware]
       :path-params [template-id :- TemplateIdPathParam]
       :body [body (describe MetadataTemplateUpdate "The template to update.")]
       :query [params StandardUserQueryParams]
@@ -99,6 +109,7 @@
       (ok (templates/update-template params template-id body)))
 
     (DELETE "/:template-id" []
+      :middleware [otel-middleware]
       :path-params [template-id :- TemplateIdPathParam]
       :query [params TemplateDeletionQueryParams]
       :summary "Mark a Metadata Template as Deleted"

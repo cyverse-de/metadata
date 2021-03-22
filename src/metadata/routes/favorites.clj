@@ -2,6 +2,7 @@
   (:use [common-swagger-api.schema]
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.favorites]
+        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [common-swagger-api.schema.metadata :as schema]
             [metadata.services.favorites :as fave]))
@@ -11,6 +12,7 @@
     :tags ["favorites"]
 
     (DELETE "/filesystem" []
+      :middleware [otel-middleware]
       :query [{:keys [user entity-type]} FavoritesDataListingParams]
       :summary "Remove All Data Resources from Favorites"
       :description "This endpoint allows users to completely clear their list of favorite data resources."
@@ -18,6 +20,7 @@
       (ok))
 
     (GET "/filesystem" []
+      :middleware [otel-middleware]
       :query [{:keys [user entity-type]} FavoritesDataListingParams]
       :return (describe DataIdList "The UUIDs of the favorite files and folders of the user.")
       :summary "List Favorite Data Resources"
@@ -25,6 +28,7 @@
       (ok (fave/list-favorite-data-ids user entity-type)))
 
     (DELETE "/filesystem/:data-id" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :summary "Unmark a Data Resource as Favorite"
@@ -32,6 +36,7 @@
       (ok (fave/remove-favorite user data-id)))
 
    (PUT "/filesystem/:data-id" []
+     :middleware [otel-middleware]
      :path-params [data-id :- schema/TargetIdParam]
      :query [{:keys [user data-type]} StandardDataItemQueryParams]
      :summary "Mark a Data Resource as Favorite"
@@ -39,6 +44,7 @@
      (ok (fave/add-favorite user data-id data-type)))
 
    (POST "/filter" []
+     :middleware [otel-middleware]
      :query [{:keys [user]} StandardUserQueryParams]
      :body [body (describe DataIdList "The UUIDs for the files and folders to be filtered.")]
      :return

@@ -2,6 +2,7 @@
   (:use [common-swagger-api.schema]
         [common-swagger-api.schema.metadata.comments]
         [metadata.routes.schemas.common]
+        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
             [common-swagger-api.schema.metadata :as schema]
@@ -12,6 +13,7 @@
     :tags ["admin-comments"]
 
     (GET "/:commenter-id" []
+      :middleware [otel-middleware]
       :path-params [commenter-id :- CommenterId]
       :query [{:keys [user]} StandardUserQueryParams]
       :responses {200      {:schema      CommentDetailsList
@@ -25,6 +27,7 @@
       (ok (comments/list-user-comments commenter-id)))
 
     (DELETE "/:commenter-id" []
+      :middleware [otel-middleware]
       :path-params [commenter-id :- CommenterId]
       :query [{:keys [user]} StandardUserQueryParams]
       :coercion middleware/no-response-coercion
@@ -44,6 +47,7 @@
     :tags ["data-comments"]
 
     (GET "/:data-id/comments" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam]
       :return CommentList
       :summary "Listing Data Comments"
@@ -51,6 +55,7 @@
       (ok (comments/list-data-comments data-id)))
 
     (POST "/:data-id/comments" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user data-type]} StandardDataItemQueryParams]
       :body [body (describe CommentRequest "The comment to add.")]
@@ -60,6 +65,7 @@
       (ok (comments/add-data-comment user data-id data-type body)))
 
     (PATCH "/:data-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
@@ -75,6 +81,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["admin-data-comments"]
 
     (DELETE "/:data-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
@@ -84,6 +91,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/delete-data-comment data-id comment-id)))
 
     (PATCH "/:data-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
@@ -99,6 +107,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["app-comments"]
 
     (GET "/:app-id/comments" []
+      :middleware [otel-middleware]
       :path-params [app-id :- schema/TargetIdParam]
       :return CommentList
       :summary "Listing App Comments"
@@ -106,6 +115,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/list-app-comments app-id)))
 
     (POST "/:app-id/comments" []
+      :middleware [otel-middleware]
       :path-params [app-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe CommentRequest "The comment to add.")]
@@ -115,6 +125,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/add-app-comment user app-id body)))
 
     (PATCH "/:app-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]
@@ -130,6 +141,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     :tags ["admin-app-comments"]
 
     (DELETE "/:app-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
@@ -138,6 +150,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
       (ok (comments/delete-app-comment app-id comment-id)))
 
     (PATCH "/:app-id/comments/:comment-id" []
+      :middleware [otel-middleware]
       :path-params [app-id :- schema/TargetIdParam
                     comment-id :- CommentIdPathParam]
       :query [{:keys [user retracted]} RetractCommentQueryParams]

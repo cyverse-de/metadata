@@ -3,6 +3,7 @@
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.permanent-id-requests]
         [metadata.services.permanent-id-requests]
+        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]]))
 
 (defroutes permanent-id-request-routes
@@ -10,6 +11,7 @@
     :tags ["permanent-id-requests"]
 
     (GET "/" []
+      :middleware [otel-middleware]
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
       :summary "List Permanent ID Requests"
@@ -17,6 +19,7 @@
       (ok (list-permanent-id-requests params)))
 
     (POST "/" []
+      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body PermanentIDRequest]
       :return PermanentIDRequestDetails
@@ -25,6 +28,7 @@
       (ok (create-permanent-id-request user body)))
 
     (GET "/status-codes" []
+      :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
       :return PermanentIDRequestStatusCodeList
       :summary "List Permanent ID Request Status Codes"
@@ -34,6 +38,7 @@
       (ok (list-permanent-id-request-status-codes params)))
 
     (GET "/types" []
+      :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
       :return PermanentIDRequestTypeList
       :summary "List Permanent ID Request Types"
@@ -42,6 +47,7 @@
       (ok (list-permanent-id-request-types params)))
 
     (GET "/:request-id" []
+      :middleware [otel-middleware]
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
@@ -54,6 +60,7 @@
     :tags ["admin-permanent-id-requests"]
 
     (GET "/" []
+      :middleware [otel-middleware]
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
       :summary "List Permanent ID Requests"
@@ -61,6 +68,7 @@
       (ok (admin-list-permanent-id-requests params)))
 
     (GET "/:request-id" []
+      :middleware [otel-middleware]
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
@@ -69,6 +77,7 @@
       (ok (admin-get-permanent-id-request user request-id)))
 
     (POST "/:request-id/status" []
+      :middleware [otel-middleware]
       :path-params [request-id :- PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body PermanentIDRequestStatusUpdate]

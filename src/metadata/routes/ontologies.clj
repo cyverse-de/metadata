@@ -2,6 +2,7 @@
   (:use [common-swagger-api.schema]
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.ontologies]
+        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [common-swagger-api.schema.ontologies :as schema]
             [metadata.services.ontology :as service]))
@@ -11,6 +12,7 @@
     :tags ["ontologies"]
 
     (GET "/" []
+          :middleware [otel-middleware]
           :query [{:keys [user]} StandardUserQueryParams]
           :return OntologyDetailsList
           :summary "List Ontology Details"
@@ -18,6 +20,7 @@
           (ok (service/get-ontology-details-listing)))
 
     (GET "/:ontology-version" []
+          :middleware [otel-middleware]
           :path-params [ontology-version :- schema/OntologyVersionParam]
           :query [{:keys [user]} StandardUserQueryParams]
           :return schema/OntologyHierarchyList
@@ -26,6 +29,7 @@
           (ok (service/list-hierarchies ontology-version)))
 
     (POST "/:ontology-version/filter" []
+           :middleware [otel-middleware]
            :path-params [ontology-version :- schema/OntologyVersionParam]
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [type id attrs]} TargetHierarchyFilterRequest]
@@ -37,6 +41,7 @@
            (ok (service/filter-target-hierarchies ontology-version attrs type id)))
 
     (POST "/:ontology-version/filter-targets" []
+           :middleware [otel-middleware]
            :path-params [ontology-version :- schema/OntologyVersionParam]
            :query [{:keys [user label]} OntologySearchParams]
            :body [{:keys [target-types target-ids attrs]} OntologySearchFilterRequest]
@@ -48,6 +53,7 @@
            (ok (service/filter-targets-by-ontology-class-search ontology-version attrs label target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter" []
+           :middleware [otel-middleware]
            :path-params [ontology-version :- schema/OntologyVersionParam
                          root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -60,6 +66,7 @@
            (ok (service/filter-hierarchy ontology-version root-iri attr target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter-targets" []
+           :middleware [otel-middleware]
            :path-params [ontology-version :- schema/OntologyVersionParam
                          root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -72,6 +79,7 @@
            (ok (service/filter-hierarchy-targets ontology-version root-iri attr target-types target-ids)))
 
     (POST "/:ontology-version/:root-iri/filter-unclassified" []
+           :middleware [otel-middleware]
            :path-params [ontology-version :- schema/OntologyVersionParam
                          root-iri :- schema/OntologyClassIRIParam]
            :query [{:keys [attr user]} OntologyHierarchyFilterParams]
@@ -88,6 +96,7 @@
     :tags ["admin-ontologies"]
 
     (POST "/" []
+           :middleware [otel-middleware]
            :query [{:keys [user]} StandardUserQueryParams]
            :multipart-params [ontology-xml :- String]
            :middleware [service/wrap-multipart-xml-parser]
@@ -97,6 +106,7 @@
            (ok (service/save-ontology-xml user ontology-xml)))
 
     (DELETE "/:ontology-version" []
+             :middleware [otel-middleware]
              :path-params [ontology-version :- schema/OntologyVersionParam]
              :query [{:keys [user]} StandardUserQueryParams]
              :summary "Delete an Ontology"
@@ -104,6 +114,7 @@
              (ok (service/delete-ontology user ontology-version)))
 
     (DELETE "/:ontology-version/:root-iri" []
+             :middleware [otel-middleware]
              :path-params [ontology-version :- schema/OntologyVersionParam
                            root-iri :- schema/OntologyClassIRIParam]
              :query [{:keys [user]} StandardUserQueryParams]
@@ -118,6 +129,7 @@
              (ok (service/delete-hierarchy user ontology-version root-iri)))
 
     (PUT "/:ontology-version/:root-iri" []
+          :middleware [otel-middleware]
           :path-params [ontology-version :- schema/OntologyVersionParam
                         root-iri :- schema/OntologyClassIRIParam]
           :query [{:keys [user]} StandardUserQueryParams]

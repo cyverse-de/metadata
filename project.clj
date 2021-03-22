@@ -32,6 +32,7 @@
                  [org.cyverse/kameleon "3.0.4"]
                  [org.cyverse/service-logging "2.8.2"]
                  [org.cyverse/event-messages "0.0.1"]
+                 [org.cyverse/otel "0.2.3"]
                  [ring/ring-jetty-adapter "1.9.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]

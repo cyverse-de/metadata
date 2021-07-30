@@ -10,5 +10,5 @@ build:
   tagPolicy:
     gitCommit: {}
   artifacts:
-  - image: discoenv/metadata
+  - image: harbor.cyverse.org/de/metadata
   local: {}

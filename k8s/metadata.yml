@@ -41,7 +41,7 @@ spec:
                 path: metadata.properties
       containers:
       - name: metadata
-        image: discoenv/metadata
+        image: harbor.cyverse.org/de/metadata
         volumeMounts:
           - name: localtime
             mountPath: /etc/localtime

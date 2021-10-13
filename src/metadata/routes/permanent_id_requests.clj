@@ -4,7 +4,8 @@
         [metadata.routes.schemas.permanent-id-requests]
         [metadata.services.permanent-id-requests]
         [otel.middleware :only [otel-middleware]]
-        [ring.util.http-response :only [ok]]))
+        [ring.util.http-response :only [ok]])
+  (:require [common-swagger-api.schema.permanent-id-requests :as schema]))
 
 (defroutes permanent-id-request-routes
   (context "/permanent-id-requests" []
@@ -14,8 +15,8 @@
       :middleware [otel-middleware]
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
-      :summary "List Permanent ID Requests"
-      :description "Lists all Permanent ID Requests submitted by the requesting user."
+      :summary schema/PermanentIDRequestListSummary
+      :description schema/PermanentIDRequestListDescription
       (ok (list-permanent-id-requests params)))
 
     (POST "/" []
@@ -23,36 +24,33 @@
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body PermanentIDRequest]
       :return PermanentIDRequestDetails
-      :summary "Create a Permanent ID Request"
-      :description "Creates a Permanent ID Request for the requesting user."
+      :summary schema/PermanentIDRequestSummary
+      :description schema/PermanentIDRequestDescription
       (ok (create-permanent-id-request user body)))
 
     (GET "/status-codes" []
       :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
-      :return PermanentIDRequestStatusCodeList
-      :summary "List Permanent ID Request Status Codes"
-      :description
-"Lists all Permanent ID Request Status Codes that have been assigned to a request status update.
- This allows a status to easily be reused by admins in future status updates."
+      :return schema/PermanentIDRequestStatusCodeList
+      :summary schema/PermanentIDRequestStatusCodeListSummary
+      :description schema/PermanentIDRequestStatusCodeListDescription
       (ok (list-permanent-id-request-status-codes params)))
 
     (GET "/types" []
       :middleware [otel-middleware]
       :query [params StandardUserQueryParams]
-      :return PermanentIDRequestTypeList
-      :summary "List Permanent ID Request Types"
-      :description
-      "Lists the allowed Permanent ID Request Types the user can select when submitting a new request."
+      :return schema/PermanentIDRequestTypeList
+      :summary schema/PermanentIDRequestTypesSummary
+      :description schema/PermanentIDRequestTypesDescription
       (ok (list-permanent-id-request-types params)))
 
     (GET "/:request-id" []
       :middleware [otel-middleware]
-      :path-params [request-id :- PermanentIDRequestIdParam]
+      :path-params [request-id :- schema/PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
-      :summary "List Permanent ID Request Details"
-      :description "Allows a user to retrieve details for one of their Permanent ID Request submissions."
+      :summary schema/PermanentIDRequestDetailsSummary
+      :description schema/PermanentIDRequestDetailsDescription
       (ok (get-permanent-id-request user request-id)))))
 
 (defroutes admin-permanent-id-request-routes
@@ -63,32 +61,25 @@
       :middleware [otel-middleware]
       :query [params PermanentIDRequestListPagingParams]
       :return PermanentIDRequestList
-      :summary "List Permanent ID Requests"
-      :description "Allows administrators to list Permanent ID Requests from all users."
+      :summary schema/PermanentIDRequestAdminListSummary
+      :description schema/PermanentIDRequestAdminListDescription
       (ok (admin-list-permanent-id-requests params)))
 
     (GET "/:request-id" []
       :middleware [otel-middleware]
-      :path-params [request-id :- PermanentIDRequestIdParam]
+      :path-params [request-id :- schema/PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :return PermanentIDRequestDetails
-      :summary "Get Permanent ID Request Details"
-      :description "Allows administrators to retrieve details for a Permanent ID Request from any user."
+      :summary schema/PermanentIDRequestAdminDetailsSummary
+      :description schema/PermanentIDRequestAdminDetailsDescription
       (ok (admin-get-permanent-id-request user request-id)))
 
     (POST "/:request-id/status" []
       :middleware [otel-middleware]
-      :path-params [request-id :- PermanentIDRequestIdParam]
+      :path-params [request-id :- schema/PermanentIDRequestIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
-      :body [body PermanentIDRequestStatusUpdate]
+      :body [body schema/PermanentIDRequestStatusUpdate]
       :return PermanentIDRequestDetails
-      :summary "Update the Status of a Permanent ID Request"
-      :description
-"Allows administrators to update the status of a Permanent ID Request from any user.
-
-`Note`: If the `permanent_id` is provided in the request, then the Permanent ID Request must not already
-have a `permanent_id` set, otherwise an error is returned and the Status is not updated.
-
-`Note`: The status code is case-sensitive, and if it isn't defined in the database already then it will
- be added to the list of known status codes."
+      :summary schema/PermanentIDRequestAdminStatusUpdateSummary
+      :description schema/PermanentIDRequestAdminStatusUpdateDescription
       (ok (update-permanent-id-request request-id user body)))))

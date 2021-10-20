@@ -2,8 +2,9 @@
   (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
             [metadata.util.db :refer [ds t]]
-            [next.jdbc :as jdbc]
-            [honey.sql :as sql])
+            [next.jdbc.plan :as plan]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h])
   (:import [java.util UUID]))
 
 (defn is-favorite?
@@ -17,10 +18,11 @@
      It returns true if the give target has been marked as a favorite, otherwise it returns false.
      It also returns false if the user or target doesn't exist."
   [user ^UUID target-id]
-  (->> {:select [[[:> :%count.* 0] :is_favorite]] :from (t "favorites") :where [:and [:= :target_id target-id] [:= :owner_id user]]}
-       (sql/format)
-       (jdbc/execute-one! ds)
-       :is_favorite))
+  (let [q (-> (h/select [[:> :%count.* 0] :is_favorite])
+              (h/from (t "favorites"))
+              (h/where [:= :target_id target-id]
+                       [:= :owner_id user]))]
+    (plan/select-one! ds :is_favorite (sql/format q))))
 
 (defn- base-select-favorites
   "A base selection query for all targets of a given type that have are favorites of a given

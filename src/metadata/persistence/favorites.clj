@@ -2,6 +2,7 @@
   (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
             [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
             [next.jdbc.plan :as plan]
             [next.jdbc.sql :as jsql]
             [next.jdbc.types :as jtypes]
@@ -99,6 +100,7 @@
      user         - the authenticated user name
      target-types - the types of targets to remove from the list."
   [user target-types]
-  (delete :favorites
-    (where {:owner_id    user
-            :target_type [in (map db/->enum-val target-types)]})))
+  (let [q (-> (h/delete-from (t "favorites"))
+              (h/where [:in :target_type [:inline target-types]]
+                       [:= :owner_id user]))]
+    (jdbc/execute! ds (sql/format q))))

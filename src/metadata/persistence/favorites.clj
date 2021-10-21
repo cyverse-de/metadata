@@ -36,10 +36,10 @@
    Returns:
      A base selection query."
   [user target-types]
-  (-> (select* :favorites)
-      (fields :target_id)
-      (where {:target_type [in (map db/->enum-val target-types)]
-              :owner_id    user})))
+  (-> (h/select :target_id)
+      (h/from (t "favorites"))
+      (h/where [:in :target_type [:inline target-types]]
+               [:= :owner_id user])))
 
 (defn select-favorites-of-type
   "Selects all targets of a given type that have are favorites of a given authenticated user.
@@ -51,15 +51,15 @@
      target-ids   - (optional) filter the result set to IDs that match those in this set
 
    Returns:
-     It returns a lazy sequence of favorite target UUIDs. If the user doesn't exist, the sequence
+     It returns a sequence of favorite target UUIDs. If the user doesn't exist, the sequence
      will be empty."
   ([user target-types]
-    (map :target_id (select (base-select-favorites user target-types))))
+    (plan/select! ds :target_id (sql/format (base-select-favorites user target-types))))
   ([user target-types target-ids]
-    (map :target_id
-      (-> (base-select-favorites user target-types)
-          (where {:target_id [in target-ids]})
-          select))))
+    (plan/select! ds :target_id
+                  (sql/format
+                    (-> (base-select-favorites user target-types)
+                        (h/where [:in :target_id target-ids]))))))
 
 (defn insert-favorite
   "Marks a given target as a favorite of the given authenticated user. It assumes the authenticated

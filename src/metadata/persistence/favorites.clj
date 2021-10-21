@@ -3,6 +3,8 @@
   (:require [kameleon.db :as db]
             [metadata.util.db :refer [ds t]]
             [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
             [honey.sql :as sql]
             [honey.sql.helpers :as h])
   (:import [java.util UUID]))
@@ -70,10 +72,11 @@
      target-id   - the UUID of the target
      target-type - the type of target (`analysis`|`app`|`file`|`folder`|`user`)"
   [user target-id target-type]
-  (insert :favorites
-    (values {:target_id   target-id
-             :target_type (db/->enum-val target-type)
-             :owner_id    user}))
+  (jsql/insert! ds
+                (t "favorites")
+                {:target_id target-id
+                 :target_type (jtypes/as-other target-type)
+                 :owner_id user})
   nil)
 
 (defn delete-favorite

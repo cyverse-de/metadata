@@ -1,7 +1,5 @@
 (ns metadata.persistence.favorites
-  (:use [korma.core :exclude [update]])
-  (:require [kameleon.db :as db]
-            [metadata.util.db :refer [ds t]]
+  (:require [metadata.util.db :refer [ds t]]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :as plan]
             [next.jdbc.sql :as jsql]

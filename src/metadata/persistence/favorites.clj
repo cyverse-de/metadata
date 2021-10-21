@@ -86,7 +86,10 @@
      user      - the authenticated user name
      target-id - the UUID of the target"
   [user target-id]
-  (delete :favorites (where {:target_id target-id :owner_id user}))
+  (jsql/delete! ds
+                (t "favorites")
+                {:target_id target-id
+                 :owner_id user})
   nil)
 
 (defn delete-favorites-of-type

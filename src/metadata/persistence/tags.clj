@@ -1,7 +1,14 @@
 (ns metadata.persistence.tags
   (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
-            [korma.core :as sql])
+            [korma.core :as ksql]
+            [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
+            [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
@@ -14,7 +21,11 @@
    Returns:
      The tag with the given ID, or nil if the tag doesn't exist."
   [tag-id]
-  (first (select :tags (where {:id tag-id}))))
+  (let [cols [:id :value :description :public :owner_id :created_on :modified_on]
+        q (-> (apply h/select cols)
+              (h/from (t "tags"))
+              (h/where [:= :id tag-id]))]
+    (plan/select-one! ds cols (sql/format q))))
 
 (defn filter-tags-owned-by-user
   "Filters a set of tags for those owned by the given user.
@@ -26,10 +37,11 @@
    Returns:
      It returns a lazy sequence of tag UUIDs owned by the given user."
   [owner tag-ids]
-  (map :id
-    (select :tags
-      (fields :id)
-      (where {:owner_id owner :id [in tag-ids]}))))
+  (let [q (-> (h/select :id)
+              (h/from (t "tags"))
+              (h/where [:= :owner_id owner]
+                       [:in :id tag-ids]))]
+    (plan/select! ds :id (sql/format q))))
 
 (defn- tags-base-query
   "Creates the base query for attached tags.
@@ -72,7 +84,10 @@
    Returns:
      The user name or nil if the tag doesn't exist."
   [tag-id]
-  (:owner_id (get-tag tag-id)))
+  (let [q (-> (h/select :owner_id)
+              (h/from (t "tags"))
+              (h/where [:= :id tag-id]))]
+    (plan/select-one! ds :owner_id (sql/format q))))
 
 (defn ^IPersistentMap insert-user-tag
   "Inserts a user tag.
@@ -108,7 +123,7 @@
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
-    (sql/update :tags
+    (ksql/update :tags
       (set-fields updates)
       (where {:id tag-id}))
     (first (select :tags (where {:id tag-id})))))
@@ -233,7 +248,7 @@
      target-id - The UUID of the target having some of its tags removed.
      tag-ids   - the collection tags to detach"
   [detacher target-id tag-ids]
-  (sql/update :attached_tags
+  (ksql/update :attached_tags
     (set-fields {:detacher_id detacher
                  :detached_on (sqlfn now)})
     (where {:target_id   target-id

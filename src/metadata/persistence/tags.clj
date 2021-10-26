@@ -43,15 +43,16 @@
                        [:in :id tag-ids]))]
     (plan/select! ds :id (sql/format q))))
 
+(def tags-base-columns [:id :value :description])
+
 (defn- tags-base-query
-  "Creates the base query for attached tags.
+  "Creates the base query for tags.
 
    Returns:
      The base query."
-  []
-  (-> (select* :tags)
-      (fields :id :value :description)))
-
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "tags"))))
 
 (defn get-tags-by-value
   "Retrieves up to a certain number of the tags owned by a given user that have a value matching a
@@ -67,13 +68,13 @@
    Returns:
      A lazy sequence of tags."
   [owner value-glob & [max-results]]
-  (let [query  (-> (tags-base-query)
-                   (where (and {:owner_id owner}
-                               (raw (str "lower(value) like lower('" value-glob "')")))))
+  (let [query  (-> (tags-base-query tags-base-columns)
+                   (h/where [:= :owner_id owner]
+                            [:like [:lower :value] [:lower value-glob]]))
         query' (if max-results
-                 (-> query (limit max-results))
+                 (-> query (h/limit max-results))
                  query)]
-    (select query')))
+    (plan/select! ds tags-base-columns (sql/format query'))))
 
 (defn get-tag-owner
   "Retrieves the user name of the owner of the given tag.
@@ -149,8 +150,9 @@
    Returns:
      A lazy sequence of tag information."
   [user]
-  (select (tags-base-query)
-    (where {:owner_id user})))
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 
 (defn delete-tags-defined-by
@@ -171,12 +173,13 @@
    Returns:
      A lazy sequence of tag resources"
   [user]
-  (select (tags-base-query)
-    (where {:owner_id user
-            :id       [in (subselect :attached_tags
-                            (fields :tag_id)
-                            (where {:attacher_id user}))]})))
-
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]
+                       [:in :id
+                        (-> (h/select :tag_id)
+                            (h/from (t "attached_tags"))
+                            (h/where [:= :attacher_id user]))]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 (defn delete-all-attached-tags
   "Deletes all tag attachments that were added by a user.
@@ -198,11 +201,14 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (select (tags-base-query)
-    (where {:owner_id user
-            :id       [in (subselect :attached_tags
-                            (fields :tag_id)
-                            (where {:target_id target-id :detached_on nil}))]})))
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]
+                       [:in :id
+                        (-> (h/select :tag_id)
+                            (h/from (t "attached_tags"))
+                            (h/where [:= :target_id target-id]
+                                     [:= :detached_on nil]))]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 (defn filter-attached-tags
   "Filter a set of tags for those attached to a given target.

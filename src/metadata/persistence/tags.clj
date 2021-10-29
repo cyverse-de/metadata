@@ -220,12 +220,12 @@
    Returns:
      It returns a lazy sequence of tag UUIDs that have been filtered."
   [target-id tag-ids]
-  (map :tag_id
-    (select :attached_tags
-      (fields :tag_id)
-      (where {:target_id   target-id
-              :detached_on nil
-              :tag_id      [in tag-ids]}))))
+  (let [q (-> (h/select :tag_id)
+              (h/from (t "attached_tags"))
+              (h/where [:= :target_id target-id]
+                       [:= :detached_on nil]
+                       [:in :tag_id tag-ids]))]
+    (plan/select! ds :tag_id (sql/format q))))
 
 (defn insert-attached-tags
   "Attach a set of user tags to a target.
@@ -272,8 +272,9 @@
    Returns:
      It returns the attachment records for the tags."
   [^ISeq tag-id & [include-detached?]]
-  (letfn [(add-detached-filter [query] (if include-detached? query (where query {:detached_on nil})))]
-    (-> (select* :attached_tags)
-        (where {:tag_id tag-id})
-        (add-detached-filter)
-        (select))))
+  (let [cols [:target_id :target_type :tag_id :attacher_id :attached_on :detacher_id :detached_on]
+        q (-> (apply h/select cols)
+              (h/from (t "attached_tags"))
+              (h/where [:= :tag_id tag-id]))
+        q (if include-detached? q (h/where q [:detached_on nil]))]
+    (plan/select! ds cols (sql/format q))))

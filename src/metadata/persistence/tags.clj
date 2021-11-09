@@ -1,6 +1,7 @@
 (ns metadata.persistence.tags
   (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
+            [clojure.tools.logging :as log]
             [korma.core :as ksql]
             [metadata.util.db :refer [ds t]]
             [next.jdbc :as jdbc]
@@ -101,11 +102,13 @@
    Returns:
      It returns the new database tag entry."
   [^String owner ^String value ^String description]
-  (let [description (if description description "")]
-    (insert :tags
-      (values {:value       value
-               :description description
-               :owner_id    owner}))))
+  (let [description (if description description "")
+        insert-vals (jsql/insert! ds
+                                  (t "tags")
+                                  {:value       value
+                                   :description description
+                                   :owner_id    owner})]
+    (get-tag (:tags/id insert-vals))))
 
 
 (defn ^IPersistentMap update-user-tag
@@ -124,10 +127,11 @@
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
-    (ksql/update :tags
-      (set-fields updates)
-      (where {:id tag-id}))
-    (first (select :tags (where {:id tag-id})))))
+    (jsql/update! ds
+                  (t "tags")
+                  updates
+                  {:id tag-id}))
+  (get-tag tag-id))
 
 
 (defn delete-user-tag
@@ -136,8 +140,12 @@
    Parameters:
      tag-id - The UUID of the tag to delete."
   [tag-id]
-  (delete :attached_tags (where {:tag_id tag-id}))
-  (delete :tags (where {:id tag-id}))
+  (jsql/delete! ds
+                (t "attached_tags")
+                {:tag_id tag-id})
+  (jsql/delete! ds
+                (t "tags")
+                {:id tag-id})
   nil)
 
 

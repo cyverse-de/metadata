@@ -1,8 +1,6 @@
 (ns metadata.persistence.tags
-  (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
             [clojure.tools.logging :as log]
-            [korma.core :as ksql]
             [metadata.util.db :refer [ds t]]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :as plan]
@@ -169,7 +167,9 @@
    Parameters:
      user - The username."
   [user]
-  (delete :tags (where {:owner_id user})))
+  (jsql/delete! ds
+                (t "tags")
+                {:owner_id user}))
 
 
 (defn select-all-attached-tags
@@ -195,8 +195,9 @@
    Parameters:
      user - the user name"
   [user]
-  (delete :attached_tags
-          (where {:attacher_id user})))
+  (jsql/delete! ds
+                (t "attached_tags")
+                {:attacher_id user}))
 
 
 (defn select-attached-tags
@@ -245,13 +246,16 @@
      tag-ids     - the collection of tags to attach"
   [attacher target-id target-type tag-ids]
   (when-not (empty? tag-ids)
-    (let [target-type (db/->enum-val target-type)
-          new-values  (map #(hash-map :tag_id      %
-                                      :target_id   target-id
-                                      :target_type target-type
-                                      :attacher_id attacher)
+    (let [target-type (jtypes/as-other target-type)
+          new-values  (mapv #(vector %
+                                     target-id
+                                     target-type
+                                     attacher)
                            tag-ids)]
-      (insert :attached_tags (values new-values))
+      (jsql/insert-multi! ds
+                         (t "attached_tags")
+                         [:tag_id :target_id :target_type :attacher_id]
+                         new-values)
       nil)))
 
 (defn mark-tags-detached
@@ -262,13 +266,14 @@
      target-id - The UUID of the target having some of its tags removed.
      tag-ids   - the collection tags to detach"
   [detacher target-id tag-ids]
-  (ksql/update :attached_tags
-    (set-fields {:detacher_id detacher
-                 :detached_on (sqlfn now)})
-    (where {:target_id   target-id
-            :detached_on nil
-            :tag_id      [in tag-ids]}))
-  nil)
+  (let [q (-> (h/update (t "attached_tags"))
+              (h/set {:detacher_id detacher
+                      :detached_on :%now})
+              (h/where [:= :target_id target-id]
+                       [:= :detached_on nil]
+                       [:in :tag_id tag-ids]))]
+    (jdbc/execute-one! ds (sql/format q))
+    nil))
 
 
 (defn ^ISeq select-tag-targets

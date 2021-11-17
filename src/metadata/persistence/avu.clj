@@ -1,6 +1,5 @@
 (ns metadata.persistence.avu
-  (:use [korma.core :exclude [update]]
-        [slingshot.slingshot :only [throw+]])
+  (:use [slingshot.slingshot :only [throw+]])
   (:require [metadata.util.db :refer [ds t]]
             [next.jdbc :as jdbc]
             [next.jdbc.plan :as plan]
@@ -8,8 +7,7 @@
             [next.jdbc.types :as jtypes]
             [honey.sql :as sql]
             [honey.sql.helpers :as h]
-            [kameleon.db :as db]
-            [korma.core :as ksql]))
+            [kameleon.db :as db]))
 
 (def avu-columns [:id :attribute :value :unit :target_id :target_type :created_by :modified_by :created_on :modified_on])
 
@@ -115,7 +113,7 @@
     (when (every? (partial contains? avu) required-keys)
       (let [avu (update avu :target_type jtypes/as-other)
             keys-used (if (contains? avu :id) (conj required-keys :id) required-keys)
-            q (-> (avus-base-query cols)
+            q (-> (avus-base-query avu-columns)
                   (apply h/where (map #(vector := % (get avu %)) keys-used)))]
         (plan/select-one! ds avu-columns (sql/format q))))))
 
@@ -127,32 +125,26 @@
       existing-avu
       (add-avus user-id [avu]))))
 
-(defn- target-where-clause
-  "Adds a where-clause to the given query for the given target."
-  [query target-type target-id]
-  (where query {:target_id   target-id
-                :target_type (db/->enum-val target-type)}))
-
-(defn- add-orphaned-ids-where-clause
-  [query avu-ids-to-keep]
-  (if (empty? avu-ids-to-keep)
-    query
-    (where query {:id [not-in avu-ids-to-keep]})))
-
 (defn remove-orphaned-avus
   "Removes AVUs for the given target-id that are not in the given set of avu-ids-to-keep."
   [target-type target-id avu-ids-to-keep]
-  (let [avus-to-remove (-> (select* :avus)
-                           (target-where-clause target-type target-id)
-                           (add-orphaned-ids-where-clause avu-ids-to-keep)
-                           select)]
+  (let [add-keep-clause (fn [query avu-ids-to-keep]
+                          (if (empty? avu-ids-to-keep)
+                            query
+                            (h/where query [:not-in :id avu-ids-to-keep])))
+        q (-> (avus-base-query [:id])
+              (h/where [:= :target_id target-id]
+                       [:= :target_type (jtypes/as-other target-type)])
+              (add-keep-clause avu-ids-to-keep))
+        avus-to-remove (plan/select! ds [:id] (sql/format q))]
     ;; Remove orphaned sub-AVUs of any AVUs to be removed by this request.
     (doseq [{:keys [id]} avus-to-remove]
       (remove-orphaned-avus "avu" id nil))
-    (-> (delete* :avus)
-        (target-where-clause target-type target-id)
-        (add-orphaned-ids-where-clause avu-ids-to-keep)
-        delete)))
+    (jdbc/execute-one! ds
+                       (-> q
+                           (dissoc :select)
+                           (h/delete-from (t "avus"))
+                           sql/format))))
 
 (defn delete-target-avu
   "Deletes the AVU with the given attribute, value, and unit from the given target."
@@ -180,13 +172,14 @@
 (defn- find-avus
   "Searches for AVUs matching the given criteria."
   [attributes target-types values units]
-  (let [add-criterion (fn [query f vs] (if (seq vs) (where query {f [in vs]}) query))]
-    (-> (select* :avus)
-        (add-criterion :attribute attributes)
-        (add-criterion :target_type (map db/->enum-val target-types))
-        (add-criterion :value values)
-        (add-criterion :unit units)
-        (select))))
+  (let [add-criterion (fn [query f vs] (if (seq vs) (h/where query [:in f vs]) query))]
+    (plan/select! ds avu-columns
+      (-> (avus-base-query avu-columns)
+          (add-criterion :attribute attributes)
+          (add-criterion :target_type (map jtypes/as-other target-types))
+          (add-criterion :value values)
+          (add-criterion :unit units)
+          (sql/format)))))
 
 (defn avu-list
   "Lists AVUs for the given target."

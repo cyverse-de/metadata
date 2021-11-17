@@ -157,12 +157,13 @@
 (defn delete-target-avu
   "Deletes the AVU with the given attribute, value, and unit from the given target."
   [target-types target-id attribute value unit]
-  (delete :avus
-          (where {:target_id   target-id
-                  :target_type [in (map db/->enum-val target-types)]
-                  :attribute   attribute
-                  :value       value
-                  :unit        unit})))
+  (let [q (-> (h/delete-from (t "avus"))
+              (h/where [:= :target_id target-id]
+                       [:in :target_type (map jtypes/as-other target-types)]
+                       [:= :attribute attribute]
+                       [:= :value value]
+                       [:= :unit unit]))]
+    (jdbc/execute-one! ds (sql/format q))))
 
 (defn format-avu
   "Formats a Metadata AVU for JSON responses."

@@ -1,52 +1,94 @@
 (ns metadata.persistence.avu
   (:use [korma.core :exclude [update]]
-        [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
-  (:require [kameleon.db :as db]
-            [korma.core :as sql]))
+  (:require [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
+            [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h]
+            [kameleon.db :as db]
+            [korma.core :as ksql]))
 
-(defn- target-where-clause
-  "Adds a where-clause to the given query for the given target."
-  [query target-type target-id]
-  (where query {:target_id   target-id
-                :target_type (db/->enum-val target-type)}))
+(def avu-columns [:id :attribute :value :unit :target_id :target_type :created_by :modified_by :created_on :modified_on])
+
+(defn- avus-base-query
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "avus"))))
 
 (defn filter-targets-by-attrs-values
   "Finds the given targets that have any of the given attributes and values."
   [target-types target-ids attributes values]
-  (select :avus
-          (modifier "DISTINCT")
-          (fields :target_id
-                  :target_type)
-          (where {:target_id   [in target-ids]
-                  :target_type [in (map db/->enum-val target-types)]
-                  :attribute   [in attributes]
-                  :value       [in values]})))
+  (let [cols [:target_id :target_type]
+        q (-> (avus-base-query cols)
+              (dissoc :select) ;; change to select distinct
+              (h/select-distinct cols)
+              (h/where [:in :target_id target-ids]
+                       [:in :target_type (map jtypes/as-other target-types)]
+                       [:in :attribute attributes]
+                       [:in :value values]))]
+    (plan/select! ds cols (sql/format q))))
 
 (defn get-avu-by-id
   "Fetches an AVU by its ID."
   [id]
-  (first (select :avus (where {:id id}))))
+  (let [q (-> (avus-base-query avu-columns)
+              (h/where [:= :id id]))]
+    (plan/select-one! ds avu-columns (sql/format q))))
 
 (defn get-avus-by-ids
   "Finds existing AVUs by a set of IDs."
   [ids]
-  (select :avus (where {:id [in ids]})))
+  (let [q (-> (avus-base-query avu-columns)
+              (h/where [:in :id ids]))]
+    (plan/select! ds avu-columns (sql/format q))))
+
 
 (defn get-avus-for-target
   "Gets AVUs for the given target."
   [target-type target-id]
-  (select :avus (target-where-clause target-type target-id)))
+  (let [q (-> (avus-base-query avu-columns)
+              (h/where [:= :target_id target-id]
+                       [:= :target_type (jtypes/as-other target-type)]))]
+    (plan/select! ds avu-columns (sql/format q))))
 
 (defn get-avus-by-attrs
   "Finds all existing AVUs by the given targets and the given set of attributes."
   [target-types target-ids attributes]
-  (select :avus
-          (where {:attribute   [in attributes]
-                  :target_id   [in target-ids]
-                  :target_type [in (map db/->enum-val target-types)]})))
+  (let [q (-> (avus-base-query avu-columns)
+              (h/where [:in :attribute attributes]
+                       [:in :target_id target-ids]
+                       [:in :target_type (map jtypes/as-other target-types)]))]
+    (plan/select! ds avu-columns (sql/format q))))
 
-(defn get-avu-for-target
+(defn add-avus
+  "Adds the given AVUs to the Metadata database."
+  [user-id avus]
+  (let [cols [:id :attribute :value :unit :target_type :target_id :created_by :modified_by]
+        fmt-avu (fn [avu]
+                  (let [avu (-> avu
+                                (update :target_type jtypes/as-other)
+                                (assoc :created_by user-id
+                                       :modified_by user-id))]
+                    (mapv #(get avu %) cols)))]
+    (jsql/insert-multi! ds
+                        (t "avus")
+                        cols
+                        (map fmt-avu avus))))
+
+(defn update-avu
+  "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
+  [user-id avu]
+  (let [q (-> (h/update (t "avus"))
+              (h/set (-> (select-keys avu [:attribute :value :unit])
+                         (assoc :modified_by user-id
+                                :modified_on :%now)))
+              (h/where [:= :id (:id avu)]))]
+    (jdbc/execute-one! ds (sql/format q))))
+
+(defn- get-avu-for-target
   "Finds an AVU by ID, validating its target_type and target_id match what's fetched from the database.
    Returns nil if an AVU with the given ID does not already exist in the database."
   [{:keys [id] :as avu}]
@@ -57,26 +99,6 @@
                :error "AVU already attached to another target item."
                :avu   existing-avu}))
     existing-avu))
-
-(defn add-avus
-  "Adds the given AVUs to the Metadata database."
-  [user-id avus]
-  (let [fmt-avu (fn [avu]
-                  (-> avu
-                      (select-keys [:id :attribute :value :unit :target_type :target_id])
-                      (update :target_type db/->enum-val)
-                      (assoc :created_by  user-id
-                             :modified_by user-id)))]
-    (insert :avus (values (map fmt-avu avus)))))
-
-(defn update-avu
-  "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
-  [user-id avu]
-  (sql/update :avus
-              (set-fields (-> (select-keys avu [:attribute :value :unit])
-                              (assoc :modified_by user-id
-                                     :modified_on (sqlfn now))))
-              (where (select-keys avu [:id]))))
 
 (defn- update-valid-avu
   "Updates an AVU, validating its given target_type and target_id match what's already in the database.
@@ -91,9 +113,11 @@
   [avu]
   (let [required-keys [:attribute :value :unit :target_type :target_id]]
     (when (every? (partial contains? avu) required-keys)
-      (first (select :avus
-                     (where (-> (select-keys avu (conj required-keys :id))
-                                (update :target_type db/->enum-val))))))))
+      (let [avu (update avu :target_type jtypes/as-other)
+            keys-used (if (contains? avu :id) (conj required-keys :id) required-keys)
+            q (-> (avus-base-query cols)
+                  (apply h/where (map #(vector := % (get avu %)) keys-used)))]
+        (plan/select-one! ds avu-columns (sql/format q))))))
 
 (defn add-or-update-avu
   [user-id avu]
@@ -102,6 +126,12 @@
     (if-let [existing-avu (update-valid-avu user-id avu)]
       existing-avu
       (add-avus user-id [avu]))))
+
+(defn- target-where-clause
+  "Adds a where-clause to the given query for the given target."
+  [query target-type target-id]
+  (where query {:target_id   target-id
+                :target_type (db/->enum-val target-type)}))
 
 (defn- add-orphaned-ids-where-clause
   [query avu-ids-to-keep]

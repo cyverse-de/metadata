@@ -1,7 +1,18 @@
 (ns metadata.persistence.comments
-  (:use [korma.core :exclude [update]])
-  (:require [kameleon.db :as db]
-            [korma.core :as sql]))
+  (:require [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
+            [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h]))
+
+(def comment-columns [:id :owner_id :post_time :retracted :retracted_by :value])
+
+(defn- comments-base-query
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "comments"))))
 
 (defn- fmt-comment
   [comment]
@@ -12,6 +23,67 @@
      :retracted    (:retracted comment)
      :retracted_by (:retracted_by comment)
      :comment      (:value comment)}))
+
+(defn comment-on?
+  "Indicates whether or not a given comment was attached to a given target.
+
+   Parameters:
+     comment-id - The UUID of the comment
+     target-id  - The UUID of the target
+
+   Returns:
+     It returns true if the comment is attached to the target, otherwise it returns false."
+  [comment-id target-id]
+  (let [q (-> (h/select [[:> :%count.* 0] :comment_exists])
+              (h/from (t "comments"))
+              (h/where [:= :id comment-id]
+                       [:= :target_id target-id]
+                       [:= :deleted false]))]
+    (plan/select-one! ds :comment_exists (sql/format q))))
+
+(defn select-comment
+  "Retrieves a comment resource
+
+    Parameters:
+      comment-id - The UUID of the comment
+
+    Returns:
+      The comment resource or nil if comment-id isn't a comment that hasn't been deleted."
+  [comment-id]
+  (let [q (-> (comments-base-query comment-columns)
+              (h/where [:= :id comment-id]
+                       [:= :deleted false]))]
+    (plan/select-one! ds fmt-comment (sql/format q))))
+
+(defn select-all-comments
+  "Retrieves all undeleted comments attached to a given target.
+
+   Parameters:
+     target-id - The UUID of the target of interest
+
+   Returns:
+     It returns a collection of comment resources attached to the target. If the target doesn't
+     exist, an empty collection will be returned."
+  [target-id]
+  (let [q (-> (comments-base-query comment-columns)
+              (h/where [:= :target_id target-id]
+                       [:= :deleted false]))]
+    (plan/select! ds fmt-comment (sql/format q))))
+
+(defn select-user-comments
+  "Retrieves a listing of all comments that were added by a single user.
+
+   Parameters:
+     commenter-id - The username of the person who added the comments
+
+   Returns:
+     A lazy sequence of detailed comment information."
+  [commenter-id]
+  (let [select-cols [:id [:owner_id :commenter] :post_time :retracted :retracted_by [:value :comment] :deleted :target_id :target_type]
+        col-keys (mapv #(if (vector? %) (nth % 1) %) select-cols)
+        q (-> (comments-base-query select-cols)
+              (h/where [:= :owner_id commenter-id]))]
+    (plan/select! ds col-keys (sql/format q))))
 
 (defn insert-comment
   "Inserts a comment into the comments table.
@@ -25,75 +97,13 @@
    Returns:
      It returns a comment resource"
   [owner target-id target-type comment]
-  (fmt-comment
-    (insert :comments
-      (values {:owner_id    owner
-               :target_id   target-id
-               :target_type (db/->enum-val target-type)
-               :value       comment}))))
-
-(defn comment-on?
-  "Indicates whether or not a given comment was attached to a given target.
-
-   Parameters:
-     comment-id - The UUID of the comment
-     target-id  - The UUID of the target
-
-   Returns:
-     It returns true if the comment is attached to the target, otherwise it returns false."
-  [comment-id target-id]
-  (-> (select :comments
-        (aggregate (count :*) :cnt)
-        (where {:id        comment-id
-                :target_id target-id
-                :deleted   false}))
-    first :cnt pos?))
-
-(defn select-comment
-  "Retrieves a comment resource
-
-    Parameters:
-      comment-id - The UUID of the comment
-
-    Returns:
-      The comment resource or nil if comment-id isn't a comment that hasn't been deleted."
-  [comment-id]
-  (-> (select :comments (where {:id comment-id :deleted false}))
-      first fmt-comment))
-
-(defn select-all-comments
-  "Retrieves all undeleted comments attached to a given target.
-
-   Parameters:
-     target-id - The UUID of the target of interest
-
-   Returns:
-     It returns a collection of comment resources attached to the target. If the target doesn't
-     exist, an empty collection will be returned."
-  [target-id]
-  (map fmt-comment (select :comments (where {:target_id target-id :deleted false}))))
-
-(defn select-user-comments
-  "Retrieves a listing of all comments that were added by a single user.
-
-   Parameters:
-     commenter-id - The username of the person who added the comments
-
-   Returns:
-     A lazy sequence of detailed comment information."
-  [commenter-id]
-  (-> (select* :comments)
-      (fields :id
-              [:owner_id :commenter]
-              :post_time
-              :retracted
-              :retracted_by
-              [:value :comment]
-              :deleted
-              :target_id
-              :target_type)
-      (where {:owner_id commenter-id})
-      select))
+  (let [insert-vals (jsql/insert! ds
+                                  (t "comments")
+                                  {:owner_id    owner
+                                   :target_id   target-id
+                                   :target_type (jtypes/as-other target-type)
+                                   :value       comment})]
+    (select-comment (:comments/id insert-vals))))
 
 (defn delete-user-comments
   "Deletes all comments that were added by a single user.
@@ -101,7 +111,7 @@
    Parameters:
      commenter-id - The username of the person who added the comments"
   [commenter-id]
-  (delete :comments (where {:owner_id commenter-id})))
+  (jsql/delete! ds (t "comments") {:owner_id commenter-id}))
 
 (defn retract-comment
   "Marks a comment as retracted. It assumes the retracting user is an authenticated user. If the
@@ -111,9 +121,11 @@
      comment-id      - The UUID of the comment being retracted
      retracting-user - The authenticated user retracting the comment."
   [comment-id retracting-user]
-  (sql/update :comments
-    (set-fields {:retracted true :retracted_by retracting-user})
-    (where {:id comment-id}))
+  (jsql/update! ds
+                (t "comments")
+                {:retracted true
+                 :retracted_by retracting-user}
+                {:id comment-id})
   nil)
 
 (defn readmit-comment
@@ -122,9 +134,11 @@
    Parameters:
      comment-id - The UUID of the comment being readmitted."
   [comment-id]
-  (sql/update :comments
-    (set-fields {:retracted false :retracted_by nil})
-    (where {:id comment-id}))
+  (jsql/update! ds
+                (t "comments")
+                {:retracted false
+                 :retracted_by nil}
+                {:id comment-id})
   nil)
 
 (defn mark-comment-deleted
@@ -133,6 +147,7 @@
    Parameters:
      comment-id - The UUID of the comment being deleted."
   [comment-id deleted?]
-  (sql/update :comments
-    (set-fields {:deleted deleted?})
-    (where {:id comment-id})))
+  (jsql/update! ds
+                (t "comments")
+                {:deleted deleted?}
+                {:id comment-id}))

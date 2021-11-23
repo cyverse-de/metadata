@@ -1,101 +1,109 @@
 (ns metadata.persistence.ontologies
-  (:use [korma.core :exclude [update]]
-        [kameleon.util.search])
-  (:require [korma.core :as sql]))
+  (:use [kameleon.util.search])
+  (:require [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
+            [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h]
+            [korma.core :as ksql]))
+
+(def ontology-columns [:version :iri :created_by :created_on])
+(defn- ontologies-base-query
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "ontologies"))))
 
 (defn add-ontology-xml
   [user version iri ontology-xml]
-  (insert :ontologies (values {:version    version
-                               :iri        iri
-                               :xml        ontology-xml
-                               :created_by user})))
+  (jsql/insert! ds
+                (t "ontologies")
+                {:version    version
+                 :iri        iri
+                 :xml        ontology-xml
+                 :created_by user}))
 
 (defn get-ontology-xml
   [ontology-version]
-  ((comp :xml first)
-   (select :ontologies
-           (fields :xml)
-           (where {:version ontology-version}))))
+  (let [q (-> (ontologies-base-query [:xml])
+              (h/where [:= :version ontology-version]))]
+    (plan/select-one! ds :xml (sql/format q))))
 
 (defn get-ontology-details
   [ontology-version]
-  (first (select :ontologies
-                 (fields :version
-                         :iri
-                         :created_by
-                         :created_on)
-                 (where {:version ontology-version}))))
+  (let [q (-> (ontologies-base-query ontology-columns)
+              (h/where [:= :version ontology-version]))]
+    (plan/select-one! ds ontology-columns (sql/format q))))
 
 (defn set-ontology-deleted
   [ontology-version deleted]
-  (sql/update :ontologies
-              (set-fields {:deleted deleted})
-              (where {:version ontology-version})))
+  (jsql/update! ds
+                (t "ontologies")
+                {:deleted deleted}
+                {:version ontology-version}))
 
 (defn list-ontologies
   []
-  (select :ontologies
-          (fields :version
-                  :iri
-                  :created_by
-                  :created_on)
-          (where {:deleted false})))
+  (let [q (-> (ontologies-base-query ontology-columns)
+              (h/where [:= :deleted false]))]
+    (plan/select! ds ontology-columns (sql/format q))))
 
 (defn add-classes
   [ontology-version classes]
   (let [class-values (map #(assoc % :ontology_version ontology-version) classes)]
     (when-not (empty? class-values)
-      (insert :ontology_classes (values class-values)))))
+      (ksql/insert :ontology_classes (ksql/values class-values)))))
 
 (defn get-classes
   [ontology-version]
-  (select :ontology_classes
-          (fields :iri
+  (ksql/select :ontology_classes
+          (ksql/fields :iri
                   :label
                   :description)
-          (where {:ontology_version ontology-version})))
+          (ksql/where {:ontology_version ontology-version})))
 
 (defn- search-classes-base
   [ontology-version search-term]
   (let [search-term (str "%" (format-query-wildcards search-term) "%")]
-    (-> (select* :ontology_classes)
-        (where {:ontology_version    ontology-version
-                (sqlfn lower :label) [like (sqlfn lower search-term)]}))))
+    (-> (ksql/select* :ontology_classes)
+        (ksql/where {:ontology_version    ontology-version
+                (ksql/sqlfn lower :label) [like (ksql/sqlfn lower search-term)]}))))
 
 (defn search-classes-subselect
   [ontology-version search-term]
   (-> (search-classes-base ontology-version search-term)
-      (subselect (fields :iri))))
+      (ksql/subselect (ksql/fields :iri))))
 
 (defn delete-classes
   [ontology-version class-iris]
-  (delete :ontology_classes
-          (where {:ontology_version ontology-version
+  (ksql/delete :ontology_classes
+          (ksql/where {:ontology_version ontology-version
                   :iri              [in class-iris]})))
 
 (defn add-hierarchies
   [ontology-version class-subclass-pairs]
   (when-not (empty? class-subclass-pairs)
     (let [hierarchy-values (map #(assoc % :ontology_version ontology-version) class-subclass-pairs)]
-      (insert :ontology_hierarchies (values hierarchy-values)))))
+      (ksql/insert :ontology_hierarchies (ksql/values hierarchy-values)))))
 
 (defn get-ontology-hierarchy-pairs
   [ontology-version]
-  (select :ontology_hierarchies
-          (fields :class_iri :subclass_iri)
-          (where {:ontology_version ontology-version})))
+  (ksql/select :ontology_hierarchies
+          (ksql/fields :class_iri :subclass_iri)
+          (ksql/where {:ontology_version ontology-version})))
 
 (defn get-ontology-hierarchy-roots
   [ontology-version]
-  (select :ontology_hierarchies
-          (modifier "DISTINCT")
-          (fields :class_iri)
-          (where {:ontology_version ontology-version
-                  :class_iri [not-in (subselect :ontology_hierarchies
-                                                (fields :subclass_iri)
-                                                (where {:ontology_version ontology-version}))]})))
+  (ksql/select :ontology_hierarchies
+          (ksql/modifier "DISTINCT")
+          (ksql/fields :class_iri)
+          (ksql/where {:ontology_version ontology-version
+                  :class_iri [not-in (ksql/subselect :ontology_hierarchies
+                                                (ksql/fields :subclass_iri)
+                                                (ksql/where {:ontology_version ontology-version}))]})))
 
 (defn get-ontology-class-hierarchy
   "Gets the class hierarchy rooted at the class with the given IRI."
   [ontology-version root-iri]
-  (select (sqlfn :ontology_class_hierarchy ontology-version root-iri)))
+  (ksql/select (ksql/sqlfn :ontology_class_hierarchy ontology-version root-iri)))

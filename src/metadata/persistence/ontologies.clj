@@ -6,8 +6,7 @@
             [next.jdbc.sql :as jsql]
             [next.jdbc.types :as jtypes]
             [honey.sql :as sql]
-            [honey.sql.helpers :as h]
-            [korma.core :as ksql]))
+            [honey.sql.helpers :as h]))
 
 (def ontology-columns [:version :iri :created_by :created_on])
 (defn- ontologies-base-query
@@ -49,61 +48,75 @@
               (h/where [:= :deleted false]))]
     (plan/select! ds ontology-columns (sql/format q))))
 
+(def ontology-class-columns [:iri :label :description])
+(defn- ontology-classes-base-query
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "ontology_classes"))))
+
 (defn add-classes
   [ontology-version classes]
   (let [class-values (map #(assoc % :ontology_version ontology-version) classes)]
     (when-not (empty? class-values)
-      (ksql/insert :ontology_classes (ksql/values class-values)))))
+      (let [new-values (mapv #(vector (:ontology_version %) (:iri %) (:label %) (:description %)) class-values)]
+        (jsql/insert-multi! ds
+                            (t "ontology_classes")
+                            [:ontology_version :iri :label :description]
+                            new-values)))))
 
 (defn get-classes
   [ontology-version]
-  (ksql/select :ontology_classes
-          (ksql/fields :iri
-                  :label
-                  :description)
-          (ksql/where {:ontology_version ontology-version})))
-
-(defn- search-classes-base
-  [ontology-version search-term]
-  (let [search-term (str "%" (format-query-wildcards search-term) "%")]
-    (-> (ksql/select* :ontology_classes)
-        (ksql/where {:ontology_version    ontology-version
-                (ksql/sqlfn lower :label) [like (ksql/sqlfn lower search-term)]}))))
+  (let [q (-> (ontology-classes-base-query ontology-class-columns)
+              (h/where [:= :ontology_version ontology-version]))]
+    (plan/select! ds ontology-class-columns (sql/format q))))
 
 (defn search-classes-subselect
   [ontology-version search-term]
-  (-> (search-classes-base ontology-version search-term)
-      (ksql/subselect (ksql/fields :iri))))
+  (let [search-term (str "%" (format-query-wildcards search-term) "%")]
+    (-> (h/select :iri)
+        (h/from (t "ontology_classes"))
+        (h/where [:= :ontology_version ontology-version]
+                 [:ilike :label search-term]))))
 
 (defn delete-classes
   [ontology-version class-iris]
-  (ksql/delete :ontology_classes
-          (ksql/where {:ontology_version ontology-version
-                  :iri              [in class-iris]})))
+  (let [q (-> (h/delete-from (t "ontology_classes"))
+              (h/where [:= :ontology_version ontology-version]
+                       [:in :iri class-iris]))]
+    (jdbc/execute-one! ds (sql/format q))))
 
 (defn add-hierarchies
   [ontology-version class-subclass-pairs]
   (when-not (empty? class-subclass-pairs)
-    (let [hierarchy-values (map #(assoc % :ontology_version ontology-version) class-subclass-pairs)]
-      (ksql/insert :ontology_hierarchies (ksql/values hierarchy-values)))))
+    (let [hierarchy-values (map #(assoc % :ontology_version ontology-version) class-subclass-pairs)
+          insert-values (mapv #(vector (:ontology_version %) (:class_iri %) (:subclass_iri %)) hierarchy-values)]
+      (jsql/insert-multi! ds
+                          (t "ontology_hierarchies")
+                          [:ontology_version :class_iri :subclass_iri]
+                          insert-values))))
 
 (defn get-ontology-hierarchy-pairs
   [ontology-version]
-  (ksql/select :ontology_hierarchies
-          (ksql/fields :class_iri :subclass_iri)
-          (ksql/where {:ontology_version ontology-version})))
+  (let [q (-> (h/select :class_iri :subclass_iri)
+              (h/from (t "ontology_hierarchies"))
+              (h/where [:= :ontology_version ontology-version]))]
+    (plan/select! ds [:class_iri :subclass_iri] (sql/format q))))
 
 (defn get-ontology-hierarchy-roots
   [ontology-version]
-  (ksql/select :ontology_hierarchies
-          (ksql/modifier "DISTINCT")
-          (ksql/fields :class_iri)
-          (ksql/where {:ontology_version ontology-version
-                  :class_iri [not-in (ksql/subselect :ontology_hierarchies
-                                                (ksql/fields :subclass_iri)
-                                                (ksql/where {:ontology_version ontology-version}))]})))
+  (let [subq (-> (h/select :subclass_iri)
+                 (h/from (t "ontology_hierarchies"))
+                 (h/where [:= :ontology_version ontology-version]))
+        q (-> (h/select-distinct :class_iri)
+              (h/from (t "ontology_hierarchies"))
+              (h/where [:= :ontology_version ontology-version]
+                       [:not-in :class_iri subq]))]
+    (plan/select! ds [:class_iri] (sql/format q))))
 
 (defn get-ontology-class-hierarchy
   "Gets the class hierarchy rooted at the class with the given IRI."
   [ontology-version root-iri]
-  (ksql/select (ksql/sqlfn :ontology_class_hierarchy ontology-version root-iri)))
+  (plan/select! ds
+                [:parent_iri :iri :label]
+                (sql/format
+                  (h/select [[:ontology_class_hierarchy ontology-version root-iri]]))))

@@ -4,7 +4,7 @@
         [korma.core :exclude [update]]
         [korma.db :only [transaction]])
   (:require [kameleon.db :as db]
-            [korma.core :as sql]))
+            [korma.core :as ksql]))
 
 (def ^:private initial-status-code "Submitted")
 
@@ -198,7 +198,7 @@
 (defn update-permanent-id-request
   "Records the Permanent ID for a given Request."
   [request-id permanent-id]
-  (sql/update :permanent_id_requests
+  (ksql/update :permanent_id_requests
     (set-fields {:permanent_id permanent-id})
     (where {:id request-id})))
 

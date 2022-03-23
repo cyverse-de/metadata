@@ -32,7 +32,7 @@
                  [org.cyverse/kameleon "3.0.4"]
                  [org.cyverse/service-logging "2.8.2"]
                  [org.cyverse/event-messages "0.0.1"]
-                 [org.cyverse/otel "0.2.3"]
+                 [org.cyverse/otel "0.2.5"]
                  [ring/ring-jetty-adapter "1.9.0"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]
@@ -53,4 +53,4 @@
                                   :test-paths]
              :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
-  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml"])
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml" "-javaagent:./opentelemetry-javaagent.jar" "-Dotel.resource.attributes=service.name=metadata"])

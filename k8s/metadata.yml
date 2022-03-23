@@ -91,7 +91,6 @@ spec:
           initialDelaySeconds: 60
           periodSeconds: 20
           timeoutSeconds: 10
-          failureThreshold: 30
         startupProbe:
           httpGet:
             path: /
@@ -99,6 +98,7 @@ spec:
           initialDelaySeconds: 60
           periodSeconds: 20
           timeoutSeconds: 10
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /

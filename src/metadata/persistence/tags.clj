@@ -1,7 +1,13 @@
 (ns metadata.persistence.tags
-  (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db]
-            [korma.core :as sql])
+            [clojure.tools.logging :as log]
+            [metadata.util.db :refer [ds t]]
+            [next.jdbc :as jdbc]
+            [next.jdbc.plan :as plan]
+            [next.jdbc.sql :as jsql]
+            [next.jdbc.types :as jtypes]
+            [honey.sql :as sql]
+            [honey.sql.helpers :as h])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
@@ -14,7 +20,11 @@
    Returns:
      The tag with the given ID, or nil if the tag doesn't exist."
   [tag-id]
-  (first (select :tags (where {:id tag-id}))))
+  (let [cols [:id :value :description :public :owner_id :created_on :modified_on]
+        q (-> (apply h/select cols)
+              (h/from (t "tags"))
+              (h/where [:= :id tag-id]))]
+    (plan/select-one! ds cols (sql/format q))))
 
 (defn filter-tags-owned-by-user
   "Filters a set of tags for those owned by the given user.
@@ -26,20 +36,22 @@
    Returns:
      It returns a lazy sequence of tag UUIDs owned by the given user."
   [owner tag-ids]
-  (map :id
-    (select :tags
-      (fields :id)
-      (where {:owner_id owner :id [in tag-ids]}))))
+  (let [q (-> (h/select :id)
+              (h/from (t "tags"))
+              (h/where [:= :owner_id owner]
+                       [:in :id tag-ids]))]
+    (plan/select! ds :id (sql/format q))))
+
+(def tags-base-columns [:id :value :description])
 
 (defn- tags-base-query
-  "Creates the base query for attached tags.
+  "Creates the base query for tags.
 
    Returns:
      The base query."
-  []
-  (-> (select* :tags)
-      (fields :id :value :description)))
-
+  [cols]
+  (-> (apply h/select cols)
+      (h/from (t "tags"))))
 
 (defn get-tags-by-value
   "Retrieves up to a certain number of the tags owned by a given user that have a value matching a
@@ -55,13 +67,13 @@
    Returns:
      A lazy sequence of tags."
   [owner value-glob & [max-results]]
-  (let [query  (-> (tags-base-query)
-                   (where (and {:owner_id owner}
-                               (raw (str "lower(value) like lower('" value-glob "')")))))
+  (let [query  (-> (tags-base-query tags-base-columns)
+                   (h/where [:= :owner_id owner]
+                            [:like [:lower :value] [:lower value-glob]]))
         query' (if max-results
-                 (-> query (limit max-results))
+                 (-> query (h/limit max-results))
                  query)]
-    (select query')))
+    (plan/select! ds tags-base-columns (sql/format query'))))
 
 (defn get-tag-owner
   "Retrieves the user name of the owner of the given tag.
@@ -72,7 +84,10 @@
    Returns:
      The user name or nil if the tag doesn't exist."
   [tag-id]
-  (:owner_id (get-tag tag-id)))
+  (let [q (-> (h/select :owner_id)
+              (h/from (t "tags"))
+              (h/where [:= :id tag-id]))]
+    (plan/select-one! ds :owner_id (sql/format q))))
 
 (defn ^IPersistentMap insert-user-tag
   "Inserts a user tag.
@@ -85,11 +100,13 @@
    Returns:
      It returns the new database tag entry."
   [^String owner ^String value ^String description]
-  (let [description (if description description "")]
-    (insert :tags
-      (values {:value       value
-               :description description
-               :owner_id    owner}))))
+  (let [description (if description description "")
+        insert-vals (jsql/insert! ds
+                                  (t "tags")
+                                  {:value       value
+                                   :description description
+                                   :owner_id    owner})]
+    (get-tag (:tags/id insert-vals))))
 
 
 (defn ^IPersistentMap update-user-tag
@@ -108,10 +125,11 @@
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
-    (sql/update :tags
-      (set-fields updates)
-      (where {:id tag-id}))
-    (first (select :tags (where {:id tag-id})))))
+    (jsql/update! ds
+                  (t "tags")
+                  updates
+                  {:id tag-id}))
+  (get-tag tag-id))
 
 
 (defn delete-user-tag
@@ -120,8 +138,12 @@
    Parameters:
      tag-id - The UUID of the tag to delete."
   [tag-id]
-  (delete :attached_tags (where {:tag_id tag-id}))
-  (delete :tags (where {:id tag-id}))
+  (jsql/delete! ds
+                (t "attached_tags")
+                {:tag_id tag-id})
+  (jsql/delete! ds
+                (t "tags")
+                {:id tag-id})
   nil)
 
 
@@ -134,8 +156,9 @@
    Returns:
      A lazy sequence of tag information."
   [user]
-  (select (tags-base-query)
-    (where {:owner_id user})))
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 
 (defn delete-tags-defined-by
@@ -144,7 +167,9 @@
    Parameters:
      user - The username."
   [user]
-  (delete :tags (where {:owner_id user})))
+  (jsql/delete! ds
+                (t "tags")
+                {:owner_id user}))
 
 
 (defn select-all-attached-tags
@@ -156,12 +181,13 @@
    Returns:
      A lazy sequence of tag resources"
   [user]
-  (select (tags-base-query)
-    (where {:owner_id user
-            :id       [in (subselect :attached_tags
-                            (fields :tag_id)
-                            (where {:attacher_id user}))]})))
-
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]
+                       [:in :id
+                        (-> (h/select :tag_id)
+                            (h/from (t "attached_tags"))
+                            (h/where [:= :attacher_id user]))]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 (defn delete-all-attached-tags
   "Deletes all tag attachments that were added by a user.
@@ -169,8 +195,9 @@
    Parameters:
      user - the user name"
   [user]
-  (delete :attached_tags
-          (where {:attacher_id user})))
+  (jsql/delete! ds
+                (t "attached_tags")
+                {:attacher_id user}))
 
 
 (defn select-attached-tags
@@ -183,11 +210,14 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (select (tags-base-query)
-    (where {:owner_id user
-            :id       [in (subselect :attached_tags
-                            (fields :tag_id)
-                            (where {:target_id target-id :detached_on nil}))]})))
+  (let [q (-> (tags-base-query tags-base-columns)
+              (h/where [:= :owner_id user]
+                       [:in :id
+                        (-> (h/select :tag_id)
+                            (h/from (t "attached_tags"))
+                            (h/where [:= :target_id target-id]
+                                     [:= :detached_on nil]))]))]
+    (plan/select! ds tags-base-columns (sql/format q))))
 
 (defn filter-attached-tags
   "Filter a set of tags for those attached to a given target.
@@ -199,12 +229,12 @@
    Returns:
      It returns a lazy sequence of tag UUIDs that have been filtered."
   [target-id tag-ids]
-  (map :tag_id
-    (select :attached_tags
-      (fields :tag_id)
-      (where {:target_id   target-id
-              :detached_on nil
-              :tag_id      [in tag-ids]}))))
+  (let [q (-> (h/select :tag_id)
+              (h/from (t "attached_tags"))
+              (h/where [:= :target_id target-id]
+                       [:= :detached_on nil]
+                       [:in :tag_id tag-ids]))]
+    (plan/select! ds :tag_id (sql/format q))))
 
 (defn insert-attached-tags
   "Attach a set of user tags to a target.
@@ -216,13 +246,16 @@
      tag-ids     - the collection of tags to attach"
   [attacher target-id target-type tag-ids]
   (when-not (empty? tag-ids)
-    (let [target-type (db/->enum-val target-type)
-          new-values  (map #(hash-map :tag_id      %
-                                      :target_id   target-id
-                                      :target_type target-type
-                                      :attacher_id attacher)
+    (let [target-type (jtypes/as-other target-type)
+          new-values  (mapv #(vector %
+                                     target-id
+                                     target-type
+                                     attacher)
                            tag-ids)]
-      (insert :attached_tags (values new-values))
+      (jsql/insert-multi! ds
+                         (t "attached_tags")
+                         [:tag_id :target_id :target_type :attacher_id]
+                         new-values)
       nil)))
 
 (defn mark-tags-detached
@@ -233,13 +266,14 @@
      target-id - The UUID of the target having some of its tags removed.
      tag-ids   - the collection tags to detach"
   [detacher target-id tag-ids]
-  (sql/update :attached_tags
-    (set-fields {:detacher_id detacher
-                 :detached_on (sqlfn now)})
-    (where {:target_id   target-id
-            :detached_on nil
-            :tag_id      [in tag-ids]}))
-  nil)
+  (let [q (-> (h/update (t "attached_tags"))
+              (h/set {:detacher_id detacher
+                      :detached_on :%now})
+              (h/where [:= :target_id target-id]
+                       [:= :detached_on nil]
+                       [:in :tag_id tag-ids]))]
+    (jdbc/execute-one! ds (sql/format q))
+    nil))
 
 
 (defn ^ISeq select-tag-targets
@@ -251,8 +285,9 @@
    Returns:
      It returns the attachment records for the tags."
   [^ISeq tag-id & [include-detached?]]
-  (letfn [(add-detached-filter [query] (if include-detached? query (where query {:detached_on nil})))]
-    (-> (select* :attached_tags)
-        (where {:tag_id tag-id})
-        (add-detached-filter)
-        (select))))
+  (let [cols [:target_id :target_type :tag_id :attacher_id :attached_on :detacher_id :detached_on]
+        q (-> (apply h/select cols)
+              (h/from (t "attached_tags"))
+              (h/where [:= :tag_id tag-id]))
+        q (if include-detached? q (h/where q [:detached_on nil]))]
+    (plan/select! ds cols (sql/format q))))

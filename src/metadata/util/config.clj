@@ -67,6 +67,12 @@
   "The password to use when authenticating to the database."
   [props config-valid configs]
   "metadata.db.password" "notprod")
+
+(cc/defprop-optstr db-schema
+  "The schema to use for queries against the database."
+  [props config-valid configs]
+  "metadata.db.schema" "public") ;; change to 'metadata' before merge
+
 ;;;End database connection information
 
 ;;;AMQP connection information

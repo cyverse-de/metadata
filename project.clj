@@ -21,6 +21,10 @@
                  [cheshire "5.10.0"]
                  [org.clojure/data.csv "1.0.0"]
 
+                 [com.github.seancorfield/next.jdbc "1.2.737"]
+                 [org.postgresql/postgresql "42.2.10"]
+                 [com.github.seancorfield/honeysql "2.1.818"]
+
                  ;; Langohr version 5.0.0 removes langohr.basic/blocking-subscribe.
                  [com.novemberain/langohr "4.2.0"]
 

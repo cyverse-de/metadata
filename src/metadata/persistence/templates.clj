@@ -3,7 +3,7 @@
         [clojure-commons.assertions :only [assert-found]]
         [korma.core :exclude [update]])
   (:require [cheshire.core :as json]
-            [korma.core :as sql]))
+            [korma.core :as ksql]))
 
 (declare format-attribute update-nested-attributes)
 
@@ -233,7 +233,7 @@
 
 (defn- update-attribute
   [user attr-id {:keys [settings] :as attr}]
-  (sql/update :attributes
+  (ksql/update :attributes
           (set-fields (prepare-attr-update user attr))
           (where {:id attr-id}))
   (when settings
@@ -307,7 +307,7 @@
 (defn update-template
   [user template-id {:keys [attributes] :as template}]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
-  (sql/update :templates
+  (ksql/update :templates
           (set-fields (prepare-template-update user template))
           (where {:id template-id}))
   (delete :template_attrs (where {:template_id template-id}))
@@ -324,7 +324,7 @@
 (defn delete-template
   [user template-id]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
-  (sql/update :templates
+  (ksql/update :templates
           (set-fields (prepare-template-deletion user))
           (where {:id template-id}))
   nil)

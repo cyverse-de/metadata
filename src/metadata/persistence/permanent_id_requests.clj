@@ -147,6 +147,7 @@
               :updated_by)
       (join [:permanent_id_request_status_codes :status_codes]
             {:status_codes.id :statuses.permanent_id_request_status_code})
+      (order :status_date :ASC)
       (where {:permanent_id_request request-id}))))
 
 (defn- request-type-subselect

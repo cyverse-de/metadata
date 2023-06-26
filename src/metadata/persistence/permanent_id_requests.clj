@@ -74,7 +74,7 @@
   "Gets Permanent ID Request details. If the given user is not nil, only fetches details if the request
   was submitted by the given user."
   [user request-id]
-  ((comp remove-nil-values first)
+  (some->
     (select [:permanent_id_requests :r]
       (fields :r.id
               :types.type
@@ -85,7 +85,9 @@
               :permanent_id)
       (join [:permanent_id_request_types :types] {:types.id :r.type})
       (where-if-defined {:r.id request-id
-                         :requested_by user}))))
+                         :requested_by user}))
+    first
+    remove-nil-values))
 
 (defn get-most-recent-status
   "Gets the most recent status for a Permanent ID Request."
@@ -147,6 +149,7 @@
               :updated_by)
       (join [:permanent_id_request_status_codes :status_codes]
             {:status_codes.id :statuses.permanent_id_request_status_code})
+      (order :status_date :ASC)
       (where {:permanent_id_request request-id}))))
 
 (defn- request-type-subselect

@@ -39,7 +39,7 @@
   [port]
   (require 'metadata.routes
            'ring.adapter.jetty)
-  (log/warn "Started listening on" (config/listen-port))
+  (log/warn "Started listening on" (or port (config/listen-port)))
   ((eval 'ring.adapter.jetty/run-jetty) (eval 'metadata.routes/app) {:port (or port (config/listen-port))}))
 
 (defn -main

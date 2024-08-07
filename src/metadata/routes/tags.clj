@@ -3,7 +3,6 @@
         [common-swagger-api.schema.metadata.tags]
         [metadata.routes.schemas.common]
         [metadata.routes.schemas.tags]
-        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [compojure.api.middleware :as middleware]
             [common-swagger-api.schema.metadata :as schema]
@@ -14,7 +13,6 @@
     :tags ["tags"]
 
     (GET "/tags" []
-      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :responses GetTagsResponses
       :summary GetTagsSummary
@@ -22,7 +20,6 @@
       (ok (tags/list-all-attached-tags user)))
 
     (DELETE "/tags" []
-      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :coercion middleware/no-response-coercion
       :responses DeleteTagsResponses
@@ -32,7 +29,6 @@
       (ok))
 
     (GET "/:data-id/tags" []
-      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :responses GetAttachedTagResponses
@@ -41,7 +37,6 @@
       (ok (tags/list-attached-tags user data-id)))
 
     (PATCH "/:data-id/tags" []
-      :middleware [otel-middleware]
       :path-params [data-id :- schema/TargetIdParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body TagIdList]
@@ -55,7 +50,6 @@
     :tags ["tags"]
 
     (GET "/suggestions" []
-      :middleware [otel-middleware]
       :query [{:keys [user contains limit]} TagSuggestUserQueryParams]
       :responses GetTagSuggestionsResponses
       :summary GetTagSuggestionsSummary
@@ -63,7 +57,6 @@
       (ok (tags/suggest-tags user contains limit)))
 
     (GET "/user" []
-      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :responses GetUserTagsResponses
       :summary GetUserTagsSummary
@@ -71,7 +64,6 @@
       (ok (tags/list-tags-defined-by user)))
 
     (DELETE "/user" []
-      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :coercion middleware/no-response-coercion
       :responses DeleteUserTagsResponses
@@ -81,7 +73,6 @@
       (ok))
 
     (POST "/user" []
-      :middleware [otel-middleware]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body TagRequest]
       :responses PostTagResponses
@@ -90,7 +81,6 @@
       (ok (tags/create-user-tag user body)))
 
     (DELETE "/user/:tag-id" []
-      :middleware [otel-middleware]
       :path-params [tag-id :- TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :coercion middleware/no-response-coercion
@@ -100,7 +90,6 @@
       (ok (tags/delete-user-tag user tag-id)))
 
     (PATCH "/user/:tag-id" []
-      :middleware [otel-middleware]
       :path-params [tag-id :- TagIdPathParam]
       :query [{:keys [user]} StandardUserQueryParams]
       :body [body TagUpdateRequest]

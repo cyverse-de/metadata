@@ -6,7 +6,6 @@
                 TargetTypeEnum
                 TargetItemList]]
         [metadata.routes.schemas.avus]
-        [otel.middleware :only [otel-middleware]]
         [ring.util.http-response :only [ok]])
   (:require [common-swagger-api.schema.metadata :as schema]
             [metadata.services.avus :as avus]))
@@ -16,7 +15,6 @@
     :tags ["avus"]
 
     (GET "/" []
-           :middleware [otel-middleware]
            :query [params AvuSearchQueryParams]
            :return schema/AvuList
            :summary "List AVUs."
@@ -24,7 +22,6 @@
            (ok (avus/list-avus params)))
 
     (POST "/deleter" []
-          :middleware [otel-middleware]
           :query [{:keys [user]} StandardUserQueryParams]
           :body [{:keys [target-types target-ids avus]} DeleteTargetAvusRequest]
           :summary "Delete Target AVUs"
@@ -32,7 +29,6 @@
           (ok (avus/delete-target-avus target-types target-ids avus)))
 
     (POST "/filter-targets" []
-           :middleware [otel-middleware]
            :query [{:keys [user]} StandardUserQueryParams]
            :body [{:keys [target-types target-ids avus]} FilterByAvusRequest]
            :return TargetIDList
@@ -43,7 +39,6 @@
            (ok (avus/filter-targets-by-avus target-types target-ids avus)))
 
     (GET "/:target-type/:target-id" []
-          :middleware [otel-middleware]
           :path-params [target-id :- schema/TargetIdParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
@@ -53,7 +48,6 @@
           (ok (avus/list-avus target-type target-id)))
 
     (POST "/:target-type/:target-id" []
-           :middleware [otel-middleware]
            :path-params [target-id :- schema/TargetIdParam
                          target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]
@@ -70,7 +64,6 @@ matching `attr`, `value`, `unit`, `target`, and `type`."
            (ok (avus/update-avus user target-type target-id body)))
 
     (PUT "/:target-type/:target-id" []
-          :middleware [otel-middleware]
           :path-params [target-id :- schema/TargetIdParam
                         target-type :- TargetTypeEnum]
           :query [{:keys [user]} StandardUserQueryParams]
@@ -90,7 +83,6 @@ then all remaining AVUs in the request will be added to the target item."
           (ok (avus/set-avus user target-type target-id body)))
 
     (POST "/:target-type/:target-id/copy" []
-           :middleware [otel-middleware]
            :path-params [target-id :- schema/TargetIdParam
                     target-type :- TargetTypeEnum]
            :query [{:keys [user]} StandardUserQueryParams]

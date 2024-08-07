@@ -18,7 +18,4 @@
     (is (= (config/exchange-name) "de"))
     (is (= (config/exchange-type) "topic"))
     (is (config/exchange-durable?))
-    (is (not (config/exchange-auto-delete?)))
-    (is (= (config/queue-name) "events.metadata.queue"))
-    (is (config/queue-durable?))
-    (is (not (config/queue-auto-delete?)))))
+    (is (not (config/exchange-auto-delete?)))))

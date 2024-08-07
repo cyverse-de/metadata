@@ -19,11 +19,9 @@
                  [net.sourceforge.owlapi/owlapi-reasoner "3.3"]
                  [me.raynes/fs "1.4.6"]
                  [cheshire "5.13.0"]
+                 [commons-io "2.16.1"]
                  [org.clojure/data.csv "1.1.0"]
-
-                 ;; Langohr version 5.0.0 removes langohr.basic/blocking-subscribe.
-                 [com.novemberain/langohr "4.2.0"]
-
+                 [com.novemberain/langohr "5.4.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [org.cyverse/clojure-commons "3.0.9"]
                  [org.cyverse/common-cfg "2.8.3"]
@@ -31,8 +29,8 @@
                  [org.cyverse/common-swagger-api "3.4.5"]
                  [org.cyverse/kameleon "3.0.10"]
                  [org.cyverse/service-logging "2.8.4"]
-                 [org.cyverse/event-messages "0.0.1"]
                  [org.cyverse/otel "0.2.6"]
+                 [ring/ring-core "1.12.2"]
                  [ring/ring-jetty-adapter "1.12.2"]
                  [sanitize-filename "0.1.0"]
                  [slingshot "0.12.2"]]

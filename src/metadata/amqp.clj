@@ -17,34 +17,22 @@
   ([val]
    (dosync (ref-set local-channel val))))
 
-(defn- declare-queue
-  [channel {exchange-name :name} queue-cfg topics]
-  (lq/declare channel (:name queue-cfg) (assoc queue-cfg :exclusive false))
-  (doseq [key topics]
-    (lq/bind channel (:name queue-cfg) exchange-name {:routing-key key})))
-
 (defn- declare-exchange
   [channel {exchange-name :name :as exchange-cfg}]
   (le/topic channel exchange-name exchange-cfg))
 
-(defn- message-router
-  [handlers channel {:keys [delivery-tag routing-key] :as metadata} msg]
-  (let [handler (get handlers routing-key)]
-    (if-not (nil? handler)
-      (handler channel metadata msg)
-      (log/error (format "[amqp/message-router] [%s] [%s] unroutable" routing-key (String. msg))))))
+(defn exchange-config
+  []
+  {:name        (config/exchange-name)
+   :durable     (config/exchange-durable?)
+   :auto-delete (config/exchange-auto-delete?)})
 
 (defn connect
-  [exchange-cfg queue-cfg routing-keys]
+  [exchange-cfg]
   (let [channel (lch/open (rmq/connect {:uri (config/amqp-uri)}))]
     (log/info (format "[amqp/connect] [%s]" (config/amqp-uri)))
     (declare-exchange channel exchange-cfg)
-    (declare-queue channel exchange-cfg queue-cfg routing-keys)
     channel))
-
-(defn subscribe
-  [channel queue-name handlers]
-  (lc/blocking-subscribe channel queue-name (partial message-router handlers)))
 
 (defn publish
   [channel routing-key msg msg-meta]

@@ -13,7 +13,9 @@
 *.iws
 
 ## Plugin-specific files:
+.clj-kondo
 .eastwood
+.lsp
 
 # IntelliJ
 /out/

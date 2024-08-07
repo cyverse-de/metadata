@@ -14,14 +14,17 @@
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.11.4"]
-                 [net.sourceforge.owlapi/owlapi-api "5.5.0"]
-                 [net.sourceforge.owlapi/owlapi-apibinding "5.5.0"]
-                 [net.sourceforge.owlapi/owlapi-reasoner "3.3"]
+                 [net.sourceforge.owlapi/owlapi-api "5.5.0"
+                  :exclusions [[org.slf4j/slf4j-api] [commons-io]]]
+                 [net.sourceforge.owlapi/owlapi-apibinding "5.5.0"
+                  :exclusions [[org.slf4j/slf4j-api] [commons-io]]]
+                 [net.sourceforge.owlapi/owlapi-reasoner "3.3"
+                  :exclusions [[org.slf4j/slf4j-api] [commons-io]]]
                  [me.raynes/fs "1.4.6"]
                  [cheshire "5.13.0"]
-                 [commons-io "2.16.1"]
                  [org.clojure/data.csv "1.1.0"]
-                 [com.novemberain/langohr "5.4.0"]
+                 [com.novemberain/langohr "5.4.0"
+                  :exclusions [org.slf4j/slf4j-api]]
                  [javax.servlet/servlet-api "2.5"]
                  [org.cyverse/clojure-commons "3.0.9"]
                  [org.cyverse/common-cfg "2.8.3"]

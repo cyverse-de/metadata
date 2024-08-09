@@ -7,11 +7,11 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.cyverse/metadata "2.16.0-SNAPSHOT"
+(defproject org.cyverse/metadata "3.0.1-SNAPSHOT"
   :description "The REST API for the Discovery Environment Metadata services."
   :url "https://github.com/cyverse-de/metadata"
   :license {:name "BSD Standard License"
-            :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+            :url "https://cyverse.org/license"}
   :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.11.4"]
                  [net.sourceforge.owlapi/owlapi-api "5.5.0"

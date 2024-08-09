@@ -1,12 +1,12 @@
-FROM clojure:openjdk-17-lein-alpine
+FROM clojure:temurin-22-lein-jammy
 
 WORKDIR /usr/src/app
 
-RUN apk add --no-cache git
+RUN apt-get update && \
+    apt-get install -y git && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN ln -s "/opt/openjdk-17/bin/java" "/bin/metadata"
-
-ENV OTEL_TRACES_EXPORTER none
+RUN ln -s "/opt/java/openjdk/bin/java" "/bin/metadata"
 
 COPY project.clj /usr/src/app/
 RUN lein deps
@@ -17,7 +17,7 @@ COPY . /usr/src/app
 RUN lein uberjar && \
     cp target/metadata-standalone.jar .
 
-ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-javaagent:/usr/src/app/opentelemetry-javaagent.jar", "-Dotel.resource.attributes=service.name=metadata", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
+ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
 CMD ["--help"]
 
 ARG git_commit=unknown

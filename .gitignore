@@ -13,7 +13,9 @@
 *.iws
 
 ## Plugin-specific files:
+.clj-kondo
 .eastwood
+.lsp
 
 # IntelliJ
 /out/
@@ -34,7 +36,6 @@ crashlytics-build.properties
 pom.xml
 pom.xml.asc
 *jar
-!opentelemetry-javaagent.jar
 /lib/
 /classes/
 /target/

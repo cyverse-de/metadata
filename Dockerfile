@@ -17,7 +17,7 @@ COPY . /usr/src/app
 RUN lein uberjar && \
     cp target/metadata-standalone.jar .
 
-ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
+ENTRYPOINT ["metadata", "-Dlogback.configurationFile=/usr/src/app/logback.xml", "-cp", ".:metadata-standalone.jar:/", "metadata.core"]
 CMD ["--help"]
 
 ARG git_commit=unknown

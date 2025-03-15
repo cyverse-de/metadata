@@ -19,6 +19,7 @@
   (assoc StandardUserQueryParams
          (s/optional-key :attribute)   (describe [String] "Attribute names to search for.")
          (s/optional-key :target-type) (describe [TargetTypeEnum] "Target types to search for.")
+         (s/optional-key :target-id)   (describe [UUID] "Target IDs to search for.")
          (s/optional-key :value)       (describe [String] "Values to search for.")
          (s/optional-key :unit)        (describe [String] "Units to search for.")))
 

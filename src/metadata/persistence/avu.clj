@@ -148,11 +148,12 @@
 
 (defn- find-avus
   "Searches for AVUs matching the given criteria."
-  [attributes target-types values units]
+  [attributes target-types target-ids values units]
   (let [add-criterion (fn [query f vs] (if (seq vs) (where query {f [in vs]}) query))]
     (-> (select* :avus)
         (add-criterion :attribute attributes)
         (add-criterion :target_type (map db/->enum-val target-types))
+        (add-criterion :target_id target-ids)
         (add-criterion :value values)
         (add-criterion :unit units)
         (select))))
@@ -161,5 +162,5 @@
   "Lists AVUs for the given target."
   ([target-type target-id]
    (map format-avu (get-avus-for-target target-type target-id)))
-  ([attributes target-types values units]
-   (map format-avu (find-avus attributes target-types values units))))
+  ([attributes target-types target-ids values units]
+   (map format-avu (find-avus attributes target-types target-ids values units))))

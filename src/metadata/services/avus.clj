@@ -28,8 +28,8 @@
 (defn list-avus
   ([target-type target-id]
    {:avus (persistence/avu-list target-type target-id)})
-  ([{attributes :attribute target-types :target-type values :value units :unit}]
-   {:avus (persistence/avu-list attributes target-types values units)}))
+  ([{attributes :attribute target-types :target-type target-ids :target-id values :value units :unit}]
+   {:avus (persistence/avu-list attributes target-types target-ids values units)}))
 
 (defn- add-or-update-avu
   "Adds or Updates an AVU and its attached AVUs for the given user ID."

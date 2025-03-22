@@ -9,7 +9,8 @@
             [common-swagger-api.schema.metadata :as schema]
             [metadata.routes.schemas.avus :refer [DeleteTargetAvusRequest
                                                   FilterByAvusRequest]]
-            [metadata.routes.schemas.common :refer [AvuSearchQueryParams
+            [metadata.routes.schemas.common :refer [AvuSearchParams
+                                                    AvuSearchQueryParams
                                                     TargetIDList
                                                     TargetTypeEnum
                                                     TargetItemList]]
@@ -46,6 +47,14 @@
            "Filters the given target IDs by returning a list of any that have metadata with the given
             `attrs` and `values`."
            (ok (avus/filter-targets-by-avus target-types target-ids avus)))
+
+    (POST "/search" []
+          :query [params StandardUserQueryParams]
+          :body [body AvuSearchParams]
+          :return schema/AvuList
+          :summary "List AVUs."
+          :description "Lists AVUs matching parameters in the request body."
+          (ok (avus/list-avus body)))
 
     (GET "/:target-type/:target-id" []
           :path-params [target-id :- schema/TargetIdParam

@@ -14,10 +14,13 @@
   (assoc StandardUserQueryParams
          :data-type DataTypeParam))
 
+(s/defschema AvuSearchParams
+  (merge schema/AvuSearchParams
+         {(s/optional-key :target-type) (describe [TargetTypeEnum] "Target types to search for.")}))
+
 (s/defschema AvuSearchQueryParams
   (merge StandardUserQueryParams
-         schema/AvuSearchQueryParams
-         {(s/optional-key :target-type) (describe [TargetTypeEnum] "Target types to search for.")}))
+         AvuSearchParams))
 
 (s/defschema TargetIDList
   {:target-ids (describe [UUID] "A list of target IDs")})

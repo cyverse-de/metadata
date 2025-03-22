@@ -1,9 +1,20 @@
 (ns metadata.persistence.avu
-  (:use [korma.core :exclude [update]]
-        [korma.db :only [transaction]]
-        [slingshot.slingshot :only [throw+]])
   (:require [kameleon.db :as db]
-            [korma.core :as sql]))
+            [korma.core :as sql :refer [delete
+                                        delete*
+                                        fields
+                                        insert
+                                        modifier
+                                        select
+                                        select*
+                                        set-fields
+                                        sqlfn
+                                        values
+                                        where]]
+            [slingshot.slingshot :refer [throw+]]))
+
+;; Declarations to eliminate lint warnings for korma predicates.
+(declare in not-in now)
 
 (defn- target-where-clause
   "Adds a where-clause to the given query for the given target."

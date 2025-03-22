@@ -1,14 +1,23 @@
 (ns metadata.routes.avus
-  (:use [common-swagger-api.schema]
-        [metadata.routes.schemas.common
-         :only [AvuSearchQueryParams
-                TargetIDList
-                TargetTypeEnum
-                TargetItemList]]
-        [metadata.routes.schemas.avus]
-        [ring.util.http-response :only [ok]])
-  (:require [common-swagger-api.schema.metadata :as schema]
-            [metadata.services.avus :as avus]))
+  (:require [common-swagger-api.schema :refer [context
+                                               defroutes
+                                               describe
+                                               GET
+                                               POST
+                                               PUT
+                                               StandardUserQueryParams]]
+            [common-swagger-api.schema.metadata :as schema]
+            [metadata.routes.schemas.avus :refer [DeleteTargetAvusRequest
+                                                  FilterByAvusRequest]]
+            [metadata.routes.schemas.common :refer [AvuSearchQueryParams
+                                                    TargetIDList
+                                                    TargetTypeEnum
+                                                    TargetItemList]]
+            [metadata.services.avus :as avus]
+            [ring.util.http-response :refer [ok]]))
+
+;; Declarations to eliminate lint warnings for path and query parameter bindings.
+(declare params body user avus target-types target-ids target-type target-id)
 
 (defroutes avus
   (context "/avus" []

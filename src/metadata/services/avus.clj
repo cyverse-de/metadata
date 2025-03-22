@@ -1,8 +1,6 @@
 (ns metadata.services.avus
-  (:use [kameleon.uuids :only [uuid]]
-        [korma.db :only [transaction]]
-        [slingshot.slingshot :only [throw+]])
-  (:require [metadata.amqp :as amqp]
+  (:require [korma.db :refer [transaction]]
+            [metadata.amqp :as amqp]
             [metadata.persistence.avu :as persistence]))
 
 (defn- filter-targets-by-attr-values

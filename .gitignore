@@ -13,7 +13,8 @@
 *.iws
 
 ## Plugin-specific files:
-.clj-kondo
+.clj-kondo/.cache
+.clj-kondo/imports
 .eastwood
 .lsp
 

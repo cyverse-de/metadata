@@ -1,9 +1,20 @@
 (ns metadata.persistence.avu
-  (:use [korma.core :exclude [update]]
-        [korma.db :only [transaction]]
-        [slingshot.slingshot :only [throw+]])
   (:require [kameleon.db :as db]
-            [korma.core :as sql]))
+            [korma.core :as sql :refer [delete
+                                        delete*
+                                        fields
+                                        insert
+                                        modifier
+                                        select
+                                        select*
+                                        set-fields
+                                        sqlfn
+                                        values
+                                        where]]
+            [slingshot.slingshot :refer [throw+]]))
+
+;; Declarations to eliminate lint warnings for korma predicates.
+(declare in not-in now)
 
 (defn- target-where-clause
   "Adds a where-clause to the given query for the given target."
@@ -148,11 +159,12 @@
 
 (defn- find-avus
   "Searches for AVUs matching the given criteria."
-  [attributes target-types values units]
+  [attributes target-types target-ids values units]
   (let [add-criterion (fn [query f vs] (if (seq vs) (where query {f [in vs]}) query))]
     (-> (select* :avus)
         (add-criterion :attribute attributes)
         (add-criterion :target_type (map db/->enum-val target-types))
+        (add-criterion :target_id target-ids)
         (add-criterion :value values)
         (add-criterion :unit units)
         (select))))
@@ -161,5 +173,5 @@
   "Lists AVUs for the given target."
   ([target-type target-id]
    (map format-avu (get-avus-for-target target-type target-id)))
-  ([attributes target-types values units]
-   (map format-avu (find-avus attributes target-types values units))))
+  ([attributes target-types target-ids values units]
+   (map format-avu (find-avus attributes target-types target-ids values units))))

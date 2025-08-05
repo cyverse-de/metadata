@@ -1,14 +1,17 @@
-apiVersion: skaffold/v1
+apiVersion: skaffold/v3
 kind: Config
 metadata:
   name: metadata
-deploy:
-  kubectl:
-    manifests:
-    - k8s/metadata.yml
 build:
+  artifacts:
+    - image: harbor.cyverse.org/de/metadata
+  platforms:
+    - "linux/amd64"
   tagPolicy:
     gitCommit: {}
-  artifacts:
-  - image: harbor.cyverse.org/de/metadata
   local: {}
+manifests:
+  rawYaml:
+    - k8s/metadata.yml
+deploy:
+  kubectl: {}
